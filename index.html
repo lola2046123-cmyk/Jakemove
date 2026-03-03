@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>超级Jack · 超级马里奥风格</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      min-height: 100vh;
+      background: linear-gradient(180deg, #e8e8e8 0%, #f5f5f5 35%, #d8d8d8 100%);
+      font-family: "PingFang SC", "Microsoft YaHei", sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 1.5rem 1rem;
+    }
+
+    /* 马里奥 IP 风格：红蓝标题区 */
+    .header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+    h1 {
+      color: #e52521;
+      font-size: 1.75rem;
+      font-weight: 800;
+      text-shadow: 3px 3px 0 #000, 2px 2px 0 #000;
+      letter-spacing: 0.02em;
+    }
+    .subtitle {
+      color: #0059bc;
+      font-size: 0.85rem;
+      font-weight: 600;
+      margin-top: 0.25rem;
+    }
+
+    .hud {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: 0;
+      padding: 8px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      z-index: 8;
+      font-weight: 700;
+      font-size: 14px;
+      color: #fff;
+      text-shadow: 2px 2px 0 #000;
+    }
+    .hud span { margin-left: 4px; }
+
+    /* 舞台 */
+    .stage-wrap {
+      position: relative;
+      border-radius: 16px;
+      box-shadow: 0 6px 0 #8b5a2b, 0 8px 24px rgba(0,0,0,0.2);
+      border: 4px solid #2d1f0d;
+    }
+    .stage {
+      width: 800px;
+      height: 400px;
+      max-width: 100%;
+      min-width: 320px;
+      position: relative;
+      overflow: hidden;
+      border-radius: 12px;
+    }
+    .stage-bg {
+      position: absolute;
+      left: 0; top: 0;
+      width: 100%; height: 100%;
+      object-fit: cover;
+      object-position: center bottom;
+      display: block;
+    }
+
+    /* 跑道仅作占位，角色直接相对舞台定位，保证默认就在可见区域 */
+    .track {
+      position: absolute;
+      left: 0; right: 0; bottom: 0;
+      height: 280px;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .character {
+      position: absolute;
+      left: 0;
+      bottom: 120px;
+      width: 100px;
+      height: 150px;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      filter: drop-shadow(2px 4px 6px rgba(0,0,0,0.35));
+      transition: none;
+      z-index: 5;
+    }
+    .character img {
+      position: absolute;
+      left: 50%;
+      bottom: 0;
+      transform: translateX(-50%);
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center bottom;
+      pointer-events: none;
+    }
+    .character img:nth-child(1) { animation: f1 0.5s steps(1) infinite; }
+    .character img:nth-child(2) { animation: f2 0.5s steps(1) infinite; }
+    .character img:nth-child(3) { animation: f3 0.5s steps(1) infinite; }
+    .character img:nth-child(4) { animation: f4 0.5s steps(1) infinite; }
+    @keyframes f1 { 0%{opacity:1} 25%{opacity:0} 100%{opacity:0} }
+    @keyframes f2 { 0%{opacity:0} 25%{opacity:1} 50%{opacity:0} 100%{opacity:0} }
+    @keyframes f3 { 0%{opacity:0} 50%{opacity:1} 75%{opacity:0} 100%{opacity:0} }
+    @keyframes f4 { 0%{opacity:0} 75%{opacity:1} 100%{opacity:0} }
+
+    /* 爆炸 */
+    .explosion {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 120px;
+      height: 120px;
+      pointer-events: none;
+      display: none;
+    }
+    .explosion span {
+      position: absolute;
+      left: 50%; top: 50%;
+      border-radius: 50%;
+      background: #ff6b00;
+      transform: translate(-50%, -50%) scale(0);
+      animation: burst 0.6s ease-out forwards;
+    }
+    .explosion span:nth-child(1) { width: 20px; height: 20px; animation-delay: 0s; }
+    .explosion span:nth-child(2) { width: 30px; height: 30px; background: #ffcc00; animation-delay: 0.05s; }
+    .explosion span:nth-child(3) { width: 40px; height: 40px; background: #ff4444; animation-delay: 0.1s; }
+    .explosion span:nth-child(4) { width: 50px; height: 50px; background: #ff8800; animation-delay: 0.15s; }
+    .explosion span:nth-child(5) { width: 60px; height: 60px; background: #ffaa00; animation-delay: 0.2s; opacity: 0.8; }
+    @keyframes burst {
+      to { transform: translate(-50%, -50%) scale(2); opacity: 0; }
+    }
+
+    .bar-explosion {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 100px;
+      height: 100px;
+      pointer-events: none;
+      display: none;
+    }
+    .bar-explosion span {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      border-radius: 50%;
+      background: #ffcc00;
+      transform: translate(-50%, -50%) scale(0);
+      animation: burst 0.5s ease-out forwards;
+    }
+    .bar-explosion span:nth-child(1) { width: 16px; height: 16px; animation-delay: 0s; }
+    .bar-explosion span:nth-child(2) { width: 28px; height: 28px; background: #ffdd44; animation-delay: 0.06s; }
+    .bar-explosion span:nth-child(3) { width: 40px; height: 40px; background: #ffaa00; animation-delay: 0.12s; }
+
+    .coins-wrap {
+      position: absolute;
+      left: 0;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 6;
+    }
+
+    .bar-bounce {
+      position: absolute;
+      left: 25%;
+      top: 7.5%;
+      width: 37.5%;
+      height: 50px;
+      background: linear-gradient(180deg, #fbd000 0%, #e69c00 100%);
+      border: 2px solid #000;
+      border-radius: 4px;
+      pointer-events: none;
+      z-index: 4;
+      opacity: 0.9;
+    }
+    .bar-bounce.bump {
+      animation: barBump 0.25s ease-out;
+    }
+    @keyframes barBump {
+      0% { transform: translateY(0); }
+      40% { transform: translateY(-10px); }
+      70% { transform: translateY(-2px); }
+      100% { transform: translateY(0); }
+    }
+    .coin {
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      margin-left: -12px;
+      margin-top: -12px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #ffd700 0%, #ffaa00 50%, #cc8800 100%);
+      box-shadow: inset -2px -2px 4px rgba(0,0,0,0.3), inset 2px 2px 4px rgba(255,255,255,0.4);
+      animation: coinPop 0.9s ease-out forwards;
+    }
+    @keyframes coinPop {
+      0% {
+        transform: translate(0, 0) scale(0.5);
+        opacity: 1;
+      }
+      25% {
+        transform: translate(var(--dx, 0), var(--dy, -50px)) scale(1.2);
+        opacity: 1;
+      }
+      100% {
+        transform: translate(var(--dx2, 0), var(--dy2, 80px)) scale(1);
+        opacity: 0;
+      }
+    }
+
+    /* Game Over 遮罩 */
+    .game-over-overlay {
+      position: absolute;
+      left: 0; top: 0;
+      right: 0; bottom: 0;
+      background: rgba(0,0,0,0.6);
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 12px;
+      z-index: 10;
+    }
+    .game-over-overlay.show {
+      display: flex;
+    }
+    .game-over-text {
+      font-size: 3.5rem;
+      font-weight: 900;
+      color: #fff;
+      text-shadow: 4px 4px 0 #e52521, 6px 6px 0 #000;
+      letter-spacing: 0.1em;
+      animation: pop 0.4s ease-out;
+    }
+    @keyframes pop {
+      0% { transform: scale(0.5); opacity: 0; }
+      70% { transform: scale(1.05); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .restart-btn {
+      margin-top: 1.5rem;
+      padding: 0.6rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 700;
+      color: #fff;
+      background: #e52521;
+      border: 3px solid #000;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #8b0000;
+    }
+    .restart-btn:hover {
+      background: #ff3333;
+      transform: translateY(-1px);
+    }
+    .restart-btn:active {
+      box-shadow: 0 2px 0 #8b0000;
+      transform: translateY(2px);
+    }
+
+    /* 控制区：马里奥风格 */
+    .controls {
+      margin-top: 1.25rem;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1rem;
+      background: linear-gradient(180deg, #f0f0f0, #e0e0e0);
+      border-radius: 12px;
+      border: 3px solid #2d1f0d;
+      max-width: 800px;
+      width: 100%;
+    }
+    .controls label {
+      color: #2d1f0d;
+      font-size: 0.9rem;
+      font-weight: 700;
+    }
+    .controls input[type="range"] {
+      width: 100px;
+      accent-color: #e52521;
+    }
+    .speed-value {
+      min-width: 2.5rem;
+      color: #0059bc;
+      font-weight: 700;
+      font-size: 0.9rem;
+    }
+    .jump-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #fff;
+      background: #58d800;
+      border: 3px solid #2d1f0d;
+      border-radius: 8px;
+      cursor: pointer;
+      box-shadow: 0 4px 0 #2e7d00;
+    }
+    .jump-btn:hover {
+      background: #6ee80a;
+    }
+    .jump-btn:active {
+      box-shadow: 0 2px 0 #2e7d00;
+      transform: translateY(2px);
+    }
+    .hint {
+      color: #666;
+      font-size: 0.8rem;
+    }
+
+    .info {
+      margin-top: 1.25rem;
+      padding: 0.9rem 1rem;
+      max-width: 800px;
+      background: rgba(255,255,255,0.7);
+      border-radius: 12px;
+      border: 2px solid #ddd;
+      font-size: 0.8rem;
+      color: #444;
+      line-height: 1.5;
+    }
+    .info h2 {
+      font-size: 0.9rem;
+      color: #2d1f0d;
+      margin-bottom: 0.4rem;
+    }
+    .info ul { padding-left: 1.1rem; }
+    .info li { margin-bottom: 0.2rem; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>超级Jack</h1>
+    <p class="subtitle">自动飞过水管 · 顶横栏拿金币 · 循环闯关</p>
+  </div>
+
+  <div class="stage-wrap">
+    <div class="stage" id="stage">
+      <div class="hud" id="hud">
+        <span>SCORE <span id="scoreEl">0</span></span>
+        <span>Round <span id="roundEl">1</span></span>
+      </div>
+      <img class="stage-bg" src="background.svg" alt="" role="presentation" />
+      <div class="bar-bounce" id="barBounce" aria-hidden="true"></div>
+      <div class="track" aria-hidden="true"></div>
+      <div class="character" id="character">
+        <img src="jack01.svg" alt="" />
+        <img src="jack02.svg" alt="" />
+        <img src="jack03.svg" alt="" />
+        <img src="jack04.svg" alt="" />
+      </div>
+      <div class="explosion" id="explosion" aria-hidden="true">
+        <span></span><span></span><span></span><span></span><span></span>
+      </div>
+      <div class="bar-explosion" id="barExplosion" aria-hidden="true">
+        <span></span><span></span><span></span>
+      </div>
+      <div class="coins-wrap" id="coinsWrap" aria-hidden="true"></div>
+      <div class="game-over-overlay" id="gameOverOverlay">
+        <div class="game-over-text">GAME OVER</div>
+        <button type="button" class="restart-btn" id="restartBtn">再玩一次</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="controls">
+    <label for="speed">速度</label>
+    <input type="range" id="speed" min="0.5" max="2.5" step="0.1" value="1" />
+    <span class="speed-value" id="speedValue">1.0×</span>
+    <button type="button" class="jump-btn" id="jumpBtn">跳跃</button>
+    <span class="hint">空格 / ↑ 也可跳跃</span>
+  </div>
+
+  <section class="info">
+    <h2>说明</h2>
+    <ul>
+      <li><strong>超级Jack</strong>自动向右走，接近右侧水管时会自动起跳飞过，继续循环闯关。</li>
+      <li>天空金色横栏：按「跳跃」或空格/↑ 顶一下会爆炸并蹦出金币。</li>
+      <li>可调节行走速度，整体风格参考超级马里奥 IP 美术。</li>
+    </ul>
+  </section>
+
+  <script>
+(function () {
+  var stage = document.getElementById('stage');
+  var character = document.getElementById('character');
+  var explosion = document.getElementById('explosion');
+  var gameOverOverlay = document.getElementById('gameOverOverlay');
+  var barExplosion = document.getElementById('barExplosion');
+  var coinsWrap = document.getElementById('coinsWrap');
+  var restartBtn = document.getElementById('restartBtn');
+  var speedInput = document.getElementById('speed');
+  var speedValue = document.getElementById('speedValue');
+  var jumpBtn = document.getElementById('jumpBtn');
+  var scoreEl = document.getElementById('scoreEl');
+  var roundEl = document.getElementById('roundEl');
+  var barBounce = document.getElementById('barBounce');
+
+  var STAGE_W = 800;
+  var STAGE_H = 400;
+  var JACK_W = 100;
+  var JACK_H = 150;
+  var GROUND_BOTTOM = 120;
+  var PIPE_LEFT = 626;
+  var PIPE_RIGHT = 682;
+  var PIPE_TOP_FROM_BOTTOM = 200;
+  var ANCHOR_LEFT = 0;
+  var ANCHOR_RIGHT = 720;
+  var ANCHOR_JUMP_MULTIPLIER = 3.0;
+  var AUTO_FLY_LEFT = 501;
+  var AUTO_FLY_RIGHT = 548;
+  var PIPE_SAFE_LEFT = 400;
+  var PIPE_SAFE_RIGHT = 720;
+  var BAR_LEFT = 200;
+  var BAR_RIGHT = 500;
+  var BAR_BOTTOM_FROM_BOTTOM = 320;
+  var BAR_TOP_FROM_BOTTOM = 370;
+
+  var audioCtx = null;
+  function getAudioCtx() {
+    if (audioCtx) return audioCtx;
+    var Ctx = window.AudioContext || window.webkitAudioContext;
+    if (!Ctx) return null;
+    audioCtx = new Ctx();
+    return audioCtx;
+  }
+  function resumeAudioOnInteraction() {
+    var ctx = getAudioCtx();
+    if (ctx && ctx.state === 'suspended') ctx.resume();
+  }
+
+  function playJumpSound() {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    resumeAudioOnInteraction();
+    var now = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'square';
+    osc.frequency.setValueAtTime(280, now);
+    osc.frequency.exponentialRampToValueAtTime(520, now + 0.08);
+    osc.frequency.setValueAtTime(520, now + 0.1);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.12);
+    osc.start(now);
+    osc.stop(now + 0.12);
+  }
+
+  function playHitSound() {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    resumeAudioOnInteraction();
+    var now = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sawtooth';
+    osc.frequency.setValueAtTime(180, now);
+    osc.frequency.exponentialRampToValueAtTime(40, now + 0.25);
+    gain.gain.setValueAtTime(0.2, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+    osc.start(now);
+    osc.stop(now + 0.3);
+  }
+
+  function playClickSound() {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    resumeAudioOnInteraction();
+    var now = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(600, now);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc.start(now);
+    osc.stop(now + 0.06);
+  }
+
+  function playCoinSound() {
+    var ctx = getAudioCtx();
+    if (!ctx) return;
+    resumeAudioOnInteraction();
+    var now = ctx.currentTime;
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(880, now);
+    osc.frequency.setValueAtTime(1100, now + 0.05);
+    gain.gain.setValueAtTime(0.15, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
+    osc.start(now);
+    osc.stop(now + 0.15);
+  }
+
+  function getStageWidth() {
+    return stage.offsetWidth || STAGE_W;
+  }
+  function pipeXLeft() {
+    return (PIPE_LEFT / STAGE_W) * getStageWidth();
+  }
+  function pipeXRight() {
+    return (PIPE_RIGHT / STAGE_W) * getStageWidth();
+  }
+
+  var state = {
+    gameOver: false,
+    jackX: 0,
+    jackBottom: GROUND_BOTTOM,
+    velocityY: 0,
+    walkSpeed: 120,
+    jumpForce: -14.3,
+    gravity: 0.19,
+    lastTime: 0,
+    frameIndex: 0,
+    barHitThisJump: false,
+    anchorJumpFrames: 0,
+    autoFlyDone: false,
+    score: 0,
+    round: 1
+  };
+
+  function updateHud() {
+    scoreEl.textContent = state.score;
+    roundEl.textContent = state.round;
+  }
+
+  function getSpeedMultiplier() {
+    return parseFloat(speedInput.value, 10) || 1;
+  }
+
+  function updateSpeedLabel() {
+    speedValue.textContent = getSpeedMultiplier().toFixed(1) + '×';
+  }
+  speedInput.addEventListener('input', updateSpeedLabel);
+  updateSpeedLabel();
+
+  // 默认位置：相对舞台底部 120px，一打开页面就能看到超级Jack
+  function applyPosition() {
+    var w = getStageWidth();
+    character.style.left = (state.jackX / STAGE_W * w) + 'px';
+    character.style.bottom = state.jackBottom + 'px';
+  }
+  applyPosition();
+  updateHud();
+
+  function jump() {
+    if (state.gameOver) return;
+    if (state.jackBottom >= GROUND_BOTTOM - 2) {
+      var inAnchor = state.jackX >= ANCHOR_LEFT && state.jackX <= ANCHOR_RIGHT;
+      state.velocityY = inAnchor
+        ? state.jumpForce * ANCHOR_JUMP_MULTIPLIER
+        : state.jumpForce;
+      if (inAnchor) state.anchorJumpFrames = 28;
+      playJumpSound();
+    }
+  }
+
+  jumpBtn.addEventListener('click', function () {
+    getAudioCtx();
+    jump();
+  });
+  document.addEventListener('keydown', function (e) {
+    if (e.code === 'Space' || e.code === 'ArrowUp') {
+      e.preventDefault();
+      getAudioCtx();
+      jump();
+    }
+  });
+
+  function checkCollision() {
+    if (state.gameOver) return;
+    if (state.anchorJumpFrames > 0) {
+      state.anchorJumpFrames--;
+      return;
+    }
+    if (state.jackX >= PIPE_SAFE_LEFT && state.jackX <= PIPE_SAFE_RIGHT) {
+      return;
+    }
+    var w = getStageWidth();
+    var jackXScaled = (state.jackX / STAGE_W) * w;
+    var jackRight = jackXScaled + (JACK_W / STAGE_W) * w;
+    var pl = pipeXLeft();
+    var pr = pipeXRight();
+    var inPipeX = jackRight > pl && jackXScaled < pr;
+    var onGround = state.jackBottom <= GROUND_BOTTOM + 15;
+    if (inPipeX && onGround) {
+      triggerGameOver();
+    }
+  }
+
+  function checkBarCollision() {
+    if (state.gameOver || state.barHitThisJump) return;
+    if (state.velocityY >= 0) return;
+    var w = getStageWidth();
+    var jackXScaled = (state.jackX / STAGE_W) * w;
+    var jackRight = jackXScaled + (JACK_W / STAGE_W) * w;
+    var jackTopFromBottom = state.jackBottom + JACK_H;
+    var barLeft = (BAR_LEFT / STAGE_W) * w;
+    var barRight = (BAR_RIGHT / STAGE_W) * w;
+    var inBarX = jackRight > barLeft && jackXScaled < barRight;
+    var hitBarFromBelow = jackTopFromBottom >= BAR_BOTTOM_FROM_BOTTOM && jackTopFromBottom <= BAR_TOP_FROM_BOTTOM + 30;
+    if (inBarX && hitBarFromBelow) {
+      triggerBarHit();
+    }
+  }
+
+  function triggerBarHit() {
+    state.barHitThisJump = true;
+    state.score += 100;
+    updateHud();
+    barBounce.classList.remove('bump');
+    barBounce.offsetHeight;
+    barBounce.classList.add('bump');
+    setTimeout(function () { barBounce.classList.remove('bump'); }, 260);
+    playCoinSound();
+    var w = getStageWidth();
+    var barCenterX = (BAR_LEFT + BAR_RIGHT) / 2 / STAGE_W * w;
+    var barCenterYFromTop = STAGE_H - (BAR_BOTTOM_FROM_BOTTOM + BAR_TOP_FROM_BOTTOM) / 2;
+    barExplosion.style.left = (barCenterX - 50) + 'px';
+    barExplosion.style.top = (barCenterYFromTop - 50) + 'px';
+    barExplosion.style.display = 'block';
+    setTimeout(function () {
+      barExplosion.style.display = 'none';
+    }, 520);
+    var coins = [
+      { dx: 0, dy: -60, dx2: 0, dy2: 100 },
+      { dx: -40, dy: -50, dx2: -60, dy2: 80 },
+      { dx: 40, dy: -50, dx2: 60, dy2: 80 },
+      { dx: -25, dy: -70, dx2: -30, dy2: 90 },
+      { dx: 25, dy: -70, dx2: 30, dy2: 90 }
+    ];
+    coinsWrap.innerHTML = '';
+    coins.forEach(function (c, i) {
+      var el = document.createElement('div');
+      el.className = 'coin';
+      el.style.left = barCenterX + 'px';
+      el.style.top = barCenterYFromTop + 'px';
+      el.style.setProperty('--dx', c.dx + 'px');
+      el.style.setProperty('--dy', c.dy + 'px');
+      el.style.setProperty('--dx2', c.dx2 + 'px');
+      el.style.setProperty('--dy2', c.dy2 + 'px');
+      coinsWrap.appendChild(el);
+      setTimeout(function () {
+        if (el.parentNode) el.parentNode.removeChild(el);
+      }, 920);
+    });
+  }
+
+  function triggerGameOver() {
+    if (state.gameOver) return;
+    state.gameOver = true;
+    playHitSound();
+    var w = getStageWidth();
+    var centerX = (state.jackX + JACK_W / 2) / STAGE_W * w;
+    var centerYFromTop = STAGE_H - state.jackBottom - JACK_H + JACK_H / 2;
+    explosion.style.left = (centerX - 60) + 'px';
+    explosion.style.top = (centerYFromTop - 60) + 'px';
+    explosion.style.display = 'block';
+    setTimeout(function () {
+      explosion.style.display = 'none';
+      explosion.classList.remove('show');
+      gameOverOverlay.classList.add('show');
+    }, 650);
+  }
+
+  function reset() {
+    state.gameOver = false;
+    state.jackX = 0;
+    state.jackBottom = GROUND_BOTTOM;
+    state.velocityY = 0;
+    state.lastTime = typeof performance !== 'undefined' ? performance.now() : 0;
+    state.score = 0;
+    state.round = 1;
+    state.barHitThisJump = false;
+    state.anchorJumpFrames = 0;
+    state.autoFlyDone = false;
+    explosion.style.display = 'none';
+    explosion.classList.remove('show');
+    barExplosion.style.display = 'none';
+    coinsWrap.innerHTML = '';
+    gameOverOverlay.classList.remove('show');
+    updateHud();
+    applyPosition();
+    requestAnimationFrame(tick);
+  }
+
+  restartBtn.addEventListener('click', function () {
+    playClickSound();
+    reset();
+  });
+
+  function tick(t) {
+    if (state.gameOver) return;
+    if (!state.lastTime) state.lastTime = t;
+    var dt = Math.min((t - state.lastTime) / 1000, 0.1);
+    state.lastTime = t;
+
+    var mul = getSpeedMultiplier();
+    state.jackX += state.walkSpeed * dt * mul;
+    if (state.jackX >= STAGE_W) {
+      state.jackX -= STAGE_W;
+      state.round++;
+      state.score += 500;
+      updateHud();
+    }
+
+    state.velocityY += state.gravity;
+    state.jackBottom -= state.velocityY;
+    if (state.jackBottom <= GROUND_BOTTOM) {
+      state.jackBottom = GROUND_BOTTOM;
+      state.velocityY = 0;
+      state.barHitThisJump = false;
+      state.anchorJumpFrames = 0;
+      state.autoFlyDone = false;
+    }
+    if (!state.autoFlyDone && state.jackX >= AUTO_FLY_LEFT && state.jackX <= AUTO_FLY_RIGHT && state.jackBottom >= GROUND_BOTTOM - 2 && state.velocityY >= 0) {
+      state.velocityY = state.jumpForce * ANCHOR_JUMP_MULTIPLIER;
+      state.autoFlyDone = true;
+      state.anchorJumpFrames = 60;
+      playJumpSound();
+    }
+    if (state.jackBottom > STAGE_H) {
+      state.jackBottom = GROUND_BOTTOM;
+      state.velocityY = 0;
+    }
+
+    applyPosition();
+    checkCollision();
+    checkBarCollision();
+    requestAnimationFrame(tick);
+  }
+
+  // 默认即启动：超级Jack 持续向右走，走路动画由 CSS 无限循环
+  requestAnimationFrame(function (t) {
+    state.lastTime = t;
+    requestAnimationFrame(tick);
+  });
+})();
+  </script>
+</body>
+</html>

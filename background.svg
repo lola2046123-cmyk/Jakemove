@@ -1,0 +1,142 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" width="800" height="600">
+  <defs>
+    <!-- Sky Gradient -->
+    <linearGradient id="skyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#6b8cff;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#85aaff;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Pipe Gradient -->
+    <linearGradient id="pipeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" style="stop-color:#007500;stop-opacity:1" />
+      <stop offset="15%" style="stop-color:#009d00;stop-opacity:1" />
+      <stop offset="40%" style="stop-color:#58d800;stop-opacity:1" />
+      <stop offset="80%" style="stop-color:#009d00;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#005200;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Question Block Gradient -->
+    <linearGradient id="qBlockGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" style="stop-color:#fbd000;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#e69c00;stop-opacity:1" />
+    </linearGradient>
+
+    <!-- Brick Pattern -->
+    <pattern id="brickPattern" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
+      <rect width="40" height="40" fill="#b84e06" />
+      <path d="M0 0 H40 M0 20 H40 M20 0 V20 M0 20 V40 M40 20 V40" stroke="#782300" stroke-width="3" fill="none"/>
+      <rect x="2" y="2" width="16" height="16" fill="#d66818" opacity="0.5"/>
+      <rect x="22" y="2" width="16" height="16" fill="#d66818" opacity="0.5"/>
+      <rect x="2" y="22" width="16" height="16" fill="#d66818" opacity="0.5"/>
+      <rect x="22" y="22" width="16" height="16" fill="#d66818" opacity="0.5"/>
+    </pattern>
+    
+    <!-- Shadow Filter -->
+    <filter id="dropShadow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="3"/>
+      <feOffset dx="3" dy="3" result="offsetblur"/>
+      <feComponentTransfer>
+        <feFuncA type="linear" slope="0.3"/>
+      </feComponentTransfer>
+      <feMerge> 
+        <feMergeNode/>
+        <feMergeNode in="SourceGraphic"/> 
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background Sky -->
+  <rect width="100%" height="100%" fill="url(#skyGradient)" />
+
+  <!-- Sky Bar (hit from below for coins) -->
+  <g transform="translate(200, 230)" filter="url(#dropShadow)">
+    <rect x="0" y="0" width="300" height="50" fill="url(#qBlockGradient)" stroke="#000" stroke-width="2"/>
+    <circle cx="30" cy="25" r="6" fill="#8f5902"/>
+    <circle cx="150" cy="25" r="6" fill="#8f5902"/>
+    <circle cx="270" cy="25" r="6" fill="#8f5902"/>
+  </g>
+
+  <!-- Background Scenery: Clouds -->
+  <g fill="#ffffff" opacity="0.8">
+    <path d="M100,150 Q120,120 150,140 Q170,110 200,140 Q230,120 250,150 L100,150 Z" />
+    <path d="M500,100 Q520,70 550,90 Q570,60 600,90 Q630,70 650,100 L500,100 Z" />
+    <path d="M650,250 Q670,220 700,240 Q720,210 750,240 Q780,220 800,250 L650,250 Z" />
+  </g>
+  
+  <!-- Background Scenery: Hills -->
+  <g transform="translate(0, 480)">
+    <path d="M50,0 Q150,-100 250,0 Z" fill="#009d00" stroke="#005200" stroke-width="4"/>
+    <path d="M100,-20 Q110,-40 120,-20 M180,-20 Q190,-40 200,-20" stroke="#005200" stroke-width="3" fill="none"/>
+    
+    <path d="M550,0 Q700,-150 850,0 Z" fill="#009d00" stroke="#005200" stroke-width="4"/>
+    <path d="M650,-40 Q670,-70 690,-40 M750,-50 Q770,-80 790,-50" stroke="#005200" stroke-width="3" fill="none"/>
+  </g>
+
+  <!-- Ground -->
+  <rect x="0" y="480" width="800" height="120" fill="url(#brickPattern)" />
+  <line x1="0" y1="480" x2="800" y2="480" stroke="#000" stroke-width="4" />
+
+  <!-- The Pipe: body ends at ground y=480, no part below ground -->
+  <g transform="translate(618, 372)" filter="url(#dropShadow)">
+    <rect x="8" y="28" width="56" height="80" fill="url(#pipeGradient)" stroke="#004200" stroke-width="2"/>
+    <rect x="0" y="0" width="72" height="28" fill="url(#pipeGradient)" stroke="#004200" stroke-width="2"/>
+    <rect x="8" y="4" width="56" height="4" fill="#003300" opacity="0.5"/>
+  </g>
+
+  <!-- Floating Blocks -->
+  <g transform="translate(200, 250)" filter="url(#dropShadow)">
+    <!-- Brick Block 1 -->
+    <rect x="0" y="0" width="60" height="60" fill="#b84e06" stroke="#000" stroke-width="2"/>
+    <path d="M0 15 H60 M0 30 H60 M0 45 H60 M30 0 V15 M15 15 V30 M45 15 V30 M30 30 V45 M15 45 V60 M45 45 V60" stroke="#000" stroke-width="2" fill="none"/>
+    
+    <!-- Question Block -->
+    <rect x="60" y="0" width="60" height="60" fill="url(#qBlockGradient)" stroke="#000" stroke-width="2"/>
+    <!-- Rivets -->
+    <circle cx="65" cy="5" r="2" fill="#8f5902"/>
+    <circle cx="115" cy="5" r="2" fill="#8f5902"/>
+    <circle cx="65" cy="55" r="2" fill="#8f5902"/>
+    <circle cx="115" cy="55" r="2" fill="#8f5902"/>
+    <!-- Question Mark -->
+    <path d="M82,45 L82,38 L98,38 L98,45 Z M80,25 Q80,10 90,10 Q100,10 100,20 Q100,28 90,28 L90,35 L90,35" fill="#8f5902" stroke="#8f5902" stroke-width="4" stroke-linecap="round"/>
+    <path d="M82,45 L82,38 L98,38 L98,45 Z M80,25 Q80,10 90,10 Q100,10 100,20 Q100,28 90,28 L90,35 L90,35" fill="#fff" transform="translate(-2,-2)"/>
+
+    <!-- Brick Block 2 -->
+    <rect x="120" y="0" width="60" height="60" fill="#b84e06" stroke="#000" stroke-width="2"/>
+    <path d="M120 15 H180 M120 30 H180 M120 45 H180 M150 0 V15 M135 15 V30 M165 15 V30 M150 30 V45 M135 45 V60 M165 45 V60" stroke="#000" stroke-width="2" fill="none"/>
+    
+    <!-- Question Block 2 -->
+    <rect x="180" y="0" width="60" height="60" fill="url(#qBlockGradient)" stroke="#000" stroke-width="2"/>
+    <circle cx="185" cy="5" r="2" fill="#8f5902"/>
+    <circle cx="235" cy="5" r="2" fill="#8f5902"/>
+    <circle cx="185" cy="55" r="2" fill="#8f5902"/>
+    <circle cx="235" cy="55" r="2" fill="#8f5902"/>
+    <path d="M202,45 L202,38 L218,38 L218,45 Z M200,25 Q200,10 210,10 Q220,10 220,20 Q220,28 210,28 L210,35 L210,35" fill="#8f5902" stroke="#8f5902" stroke-width="4" stroke-linecap="round"/>
+    <path d="M202,45 L202,38 L218,38 L218,45 Z M200,25 Q200,10 210,10 Q220,10 220,20 Q220,28 210,28 L210,35 L210,35" fill="#fff" transform="translate(-2,-2)"/>
+    
+    <!-- Brick Block 3 -->
+    <rect x="240" y="0" width="60" height="60" fill="#b84e06" stroke="#000" stroke-width="2"/>
+    <path d="M240 15 H300 M240 30 H300 M240 45 H300 M270 0 V15 M255 15 V30 M285 15 V30 M270 30 V45 M255 45 V60 M285 45 V60" stroke="#000" stroke-width="2" fill="none"/>
+  </g>
+
+  <!-- Goomba -->
+  <g transform="translate(450, 440)" filter="url(#dropShadow)">
+    <!-- Feet -->
+    <ellipse cx="10" cy="40" rx="12" ry="8" fill="#000"/>
+    <ellipse cx="40" cy="40" rx="12" ry="8" fill="#000"/>
+    <!-- Head/Body -->
+    <path d="M5,35 Q25,-10 45,35 L40,40 L10,40 Z" fill="#b84e06"/>
+    <!-- Eyes -->
+    <ellipse cx="18" cy="20" rx="5" ry="7" fill="#fff"/>
+    <ellipse cx="32" cy="20" rx="5" ry="7" fill="#fff"/>
+    <circle cx="19" cy="20" r="2" fill="#000"/>
+    <circle cx="31" cy="20" r="2" fill="#000"/>
+    <!-- Eyebrows -->
+    <path d="M10,12 L22,18" stroke="#000" stroke-width="2"/>
+    <path d="M40,12 L28,18" stroke="#000" stroke-width="2"/>
+    <!-- Mouth -->
+    <path d="M20,32 Q25,28 30,32" stroke="#000" stroke-width="1" fill="none"/>
+    <!-- Teeth -->
+    <path d="M22,32 L24,28 L26,32 M28,32 L30,28 L32,32" fill="#fff"/>
+  </g>
+
+</svg>
