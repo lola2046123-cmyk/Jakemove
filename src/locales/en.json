@@ -1,0 +1,123 @@
+{
+  "nav": {
+    "discover": "Discover",
+    "shareSkill": "Share Skill",
+    "statsTemplate": "{count} skills · {members} members",
+    "ariaMain": "Main navigation",
+    "ariaHome": "Go to home"
+  },
+  "hero": {
+    "overline": "Community · 58 Members",
+    "title": "The Team's AI Skill Library",
+    "subtitle": "Discover, copy, and share the best AI prompts & configs.",
+    "cta": "Share Skill →"
+  },
+  "grid": {
+    "clearSearch": "Clear search",
+    "searchPlaceholder": "Search skills, tools, authors…",
+    "resultsFound": "{n} skills found",
+    "resultFound": "{n} skill found",
+    "noResults": "No skills found",
+    "noResultsHint": "Try a different search or filter",
+    "filterAll": "All",
+    "filterOther": "Other"
+  },
+  "skill": {
+    "authorYou": "You"
+  },
+  "card": {
+    "by": "by",
+    "copies": "copies",
+    "copy": "Copy",
+    "copied": "Copied"
+  },
+  "upload": {
+    "title": "Share a Skill",
+    "subtitle": "Fill in the metadata, then write the content",
+    "skillName": "Skill Name",
+    "skillNamePlaceholder": "e.g. Deep Code Review",
+    "tool": "Tool",
+    "targetModel": "Target Model",
+    "description": "One-line description",
+    "descriptionPlaceholder": "A brief description of what this skill does…",
+    "tags": "Tags / Category",
+    "tagsPlaceholder": "code-review, security (comma-separated)",
+    "cancel": "Cancel",
+    "next": "Next: Write Content →",
+    "stepMeta": "Metadata",
+    "stepContent": "Manifest & notes",
+    "manifestNextStepHint": "Manifest / config and tuning notes are edited in the full-screen editor in the next step. This screen only collects metadata.",
+    "required": "required",
+    "errorRequired": "This field is required",
+    "close": "Close"
+  },
+  "editor": {
+    "manifestPanel": "Manifest / config",
+    "chopPanel": "Initial Chop (optional)",
+    "edit": "Edit",
+    "preview": "Preview",
+    "back": "← Edit Metadata",
+    "publish": "Publish Skill",
+    "publishing": "Publishing…",
+    "published": "Skill published!",
+    "publishedSub": "Your skill is now live in the discovery grid.",
+    "manifestPlaceholder": "# Skill Title\n\nPaste your full prompt, instruction block, or YAML config here…",
+    "chopPlaceholder": "Share tips, edge cases, tuning notes… Markdown supported",
+    "manifestRequired": "Manifest content is required",
+    "noPreview": "Nothing to preview yet",
+    "lang": "Detect language",
+    "lineCount": "{n} lines"
+  },
+  "chops": {
+    "overline": "Chops Board",
+    "title": "Tuning Notes & War Stories",
+    "subtitle": "Share what you discovered when using this skill in the wild.",
+    "empty": "Be the first to share a chop",
+    "addTitle": "Add a Chop",
+    "write": "Write",
+    "preview": "Preview",
+    "namePlaceholder": "Your name",
+    "placeholder": "Share your tuning experience, edge cases, or tips. Markdown supported.",
+    "post": "Post Chop",
+    "posting": "Posting…",
+    "noPreview": "Nothing to preview",
+    "likeCount": "{n} likes"
+  },
+  "leaderboard": {
+    "overline": "This Week",
+    "title": "Top Contributors",
+    "skillsCount": "{n} skills",
+    "footer": "58 members · This week",
+    "rank4": "4th",
+    "rank5": "5th"
+  },
+  "detail": {
+    "notFound": "Skill not found.",
+    "back": "Back to skills",
+    "manifesto": "Manifesto",
+    "copyManifesto": "Copy Manifesto",
+    "copied": "Copied!",
+    "copies": "copies",
+    "chops": "chops",
+    "install": "Install Skill",
+    "installTitle": "Quick Start",
+    "installStep1": "Run in terminal",
+    "installStep2": "Paste into any AI agent",
+    "installCopied": "Command copied",
+    "installClose": "Close"
+  },
+  "theme": {
+    "dark": "Dark",
+    "light": "Light",
+    "switchToDark": "Switch to dark theme",
+    "switchToLight": "Switch to light theme"
+  },
+  "lang": {
+    "switchToEn": "Switch to English",
+    "switchToZh": "Switch to Simplified Chinese",
+    "shortEn": "EN",
+    "shortZh": "CN",
+    "buttonToEn": "English",
+    "buttonToZh": "中文"
+  }
+}

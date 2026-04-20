@@ -1,61 +1,73 @@
-# 超级 Jack · Jakemove
+# React + TypeScript + Vite
 
-一款**超级马里奥风格**的浏览器小游戏：角色 Jack 自动向右奔跑，飞过水管、顶横栏拿金币，循环闯关。
+This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
-![超级Jack](https://img.shields.io/badge/超级Jack-闯关游戏-e52521?style=flat-square)
+Currently, two official plugins are available:
 
-## 玩法说明
+- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
+- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
 
-- **自动前进**：Jack 会持续向右走，接近右侧水管时会**自动起跳**飞过，过关后循环继续。
-- **金色横栏**：天空中的金色横栏可用「跳跃」或 **空格 / ↑** 从下方顶一下，会爆炸并蹦出金币，得分 +100。
-- **速度调节**：可通过滑块调节行走速度（0.5×～2.5×）。
-- **碰撞规则**：若未及时跳起撞到水管则 **GAME OVER**，点击「再玩一次」重新开始。
+## React Compiler
 
-## 操作方式
+The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
 
-| 操作     | 按键/方式           |
-|----------|----------------------|
-| 跳跃     | 空格、↑ 或 点击「跳跃」按钮 |
-| 调节速度 | 拖动速度滑块         |
-| 重新开始 | 游戏结束后点击「再玩一次」 |
+## Expanding the ESLint configuration
 
-## 本地运行
+If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
 
-无需构建，用浏览器直接打开 `index.html` 即可：
+```js
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
 
-```bash
-# 方式一：直接双击 index.html 用浏览器打开
+      // Remove tseslint.configs.recommended and replace with this
+      tseslint.configs.recommendedTypeChecked,
+      // Alternatively, use this for stricter rules
+      tseslint.configs.strictTypeChecked,
+      // Optionally, add this for stylistic rules
+      tseslint.configs.stylisticTypeChecked,
 
-# 方式二：用本地服务器（可选）
-npx serve .
-# 或
-python3 -m http.server 8000
-# 然后访问 http://localhost:8000
+      // Other configs...
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
 
-## 项目结构
+You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
 
+```js
+// eslint.config.js
+import reactX from 'eslint-plugin-react-x'
+import reactDom from 'eslint-plugin-react-dom'
+
+export default defineConfig([
+  globalIgnores(['dist']),
+  {
+    files: ['**/*.{ts,tsx}'],
+    extends: [
+      // Other configs...
+      // Enable lint rules for React
+      reactX.configs['recommended-typescript'],
+      // Enable lint rules for React DOM
+      reactDom.configs.recommended,
+    ],
+    languageOptions: {
+      parserOptions: {
+        project: ['./tsconfig.node.json', './tsconfig.app.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
+      // other options...
+    },
+  },
+])
 ```
-Jakemove/
-├── index.html      # 主页面（含样式与游戏逻辑）
-├── background.svg  # 舞台背景
-├── jack01.svg      # 角色跑步帧 1
-├── jack02.svg      # 角色跑步帧 2
-├── jack03.svg      # 角色跑步帧 3
-├── jack04.svg      # 角色跑步帧 4
-└── README.md       # 本说明
-```
-
-## 技术说明
-
-- **纯前端**：HTML + CSS + JavaScript，无依赖、无构建。
-- **动画**：角色跑步为 4 帧 SVG 序列 + CSS 关键帧；顶横栏、撞水管有简单爆炸与金币飞散动画。
-- **音效**：使用 Godot 官方示例项目中的 jump / explode / coin 音效（通过 CDN 加载，需网络）。
-
-## 许可证
-
-本项目仅供学习与娱乐使用。
-
----
-
-**超级 Jack** — 自动飞过水管 · 顶横栏拿金币 · 循环闯关
