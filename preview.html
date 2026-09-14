@@ -1,0 +1,802 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>进击的JACK · 预览</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site.css" />
+  <style>
+    .wrap { max-width: 1280px; }
+
+    .page-hero { margin-bottom: var(--space-xl); }
+
+    .header-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 4px 12px;
+      background: var(--surface-card);
+      border: 0;
+      border-radius: var(--radius-pill);
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--ink);
+    }
+
+    .badge strong { color: var(--ink); font-weight: 600; }
+
+    .meta-line {
+      color: var(--muted);
+      font-size: 14px;
+      margin-top: 8px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1.1fr 0.9fr;
+      gap: 16px;
+    }
+
+    @media (max-width: 960px) {
+      .grid { grid-template-columns: 1fr; }
+    }
+
+    .card {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .card-hd {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--hairline);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      color: var(--muted);
+      background: var(--surface-soft);
+    }
+
+    .card-hd strong {
+      color: var(--ink);
+      font-weight: 600;
+      text-transform: none;
+      letter-spacing: 0;
+      font-size: 16px;
+    }
+
+    .stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 320px;
+      position: relative;
+      padding: 24px;
+      transition: background 0.2s;
+    }
+
+    .stage.bg-dark {
+      background-color: var(--surface-dark);
+      background-image:
+        linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    .stage.bg-light {
+      background-color: #ffffff;
+      background-image:
+        linear-gradient(rgba(0,0,0,0.045) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,0,0,0.045) 1px, transparent 1px);
+      background-size: 16px 16px;
+    }
+
+    .stage canvas,
+    .gif-preview {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      max-width: 100%;
+    }
+
+    .stage canvas {
+      max-height: 360px;
+      background: var(--surface-dark);
+    }
+
+    .stage.bg-light canvas {
+      background: #ffffff;
+    }
+
+    .gif-preview {
+      max-width: min(100%, 320px);
+      max-height: 280px;
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      padding: 14px 16px;
+      border-top: 1px solid var(--hairline);
+      background: var(--canvas);
+    }
+
+    button {
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--hairline);
+      background: var(--canvas);
+      color: var(--ink);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+    }
+
+    button:hover { border-color: var(--ink); }
+
+    button.primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    button.primary:hover { background: var(--primary-active); }
+
+    button.active {
+      background: var(--surface-card);
+      border-color: var(--ink);
+      color: var(--ink);
+    }
+
+    .seg {
+      display: inline-flex;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-md);
+      overflow: hidden;
+      background: var(--canvas);
+    }
+
+    .seg button {
+      border: 0;
+      border-radius: 0;
+      border-right: 1px solid var(--hairline);
+      padding: 8px 12px;
+      font-size: 13px;
+    }
+
+    .seg button:last-child { border-right: 0; }
+
+    .seg button.on {
+      background: var(--primary);
+      color: var(--on-primary);
+    }
+
+    .slider-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      flex: 1;
+      min-width: 140px;
+    }
+
+    .slider-group label {
+      font-size: 12px;
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    input[type="range"] {
+      flex: 1;
+      accent-color: var(--brand-coral);
+    }
+
+    .val {
+      font-variant-numeric: tabular-nums;
+      min-width: 3.2em;
+      text-align: right;
+      font-size: 0.8rem;
+    }
+
+    .atlas-wrap {
+      position: relative;
+      overflow: auto;
+      max-height: 520px;
+      background: var(--surface-dark);
+      cursor: crosshair;
+    }
+
+    .atlas-wrap.bg-light { background: var(--surface-strong); }
+
+    .atlas-wrap canvas {
+      display: block;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      background: var(--surface-dark);
+    }
+
+    .atlas-wrap.bg-light canvas {
+      background: #ffffff;
+    }
+
+    .side-stack { display: flex; flex-direction: column; gap: 16px; }
+
+    .frame-list {
+      max-height: 280px;
+      overflow: auto;
+      padding: 8px;
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(88px, 1fr));
+      gap: 8px;
+      background: var(--canvas);
+    }
+
+    .frame-chip {
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-md);
+      padding: 8px;
+      text-align: center;
+      cursor: pointer;
+      background: var(--surface-soft);
+    }
+
+    .frame-chip:hover { border-color: var(--ink); }
+    .frame-chip.current {
+      border-color: var(--ink);
+      background: var(--surface-card);
+    }
+
+    .frame-chip .thumb {
+      width: 56px;
+      height: 48px;
+      margin: 0 auto 6px;
+      image-rendering: pixelated;
+      border-radius: var(--radius-xs);
+      display: block;
+    }
+
+    .frame-chip .thumb.bg-dark { background: var(--surface-dark); }
+    .frame-chip .thumb.bg-light { background: #fff; border: 1px solid var(--hairline); }
+
+    .frame-chip .name {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .info {
+      padding: 14px 16px;
+      font-size: 13px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px 16px;
+      background: var(--canvas);
+      border-top: 1px solid var(--hairline);
+    }
+
+    .info dt { color: var(--muted); }
+    .info dd {
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      margin: 0;
+    }
+
+    .hint {
+      margin-top: 18px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .err {
+      padding: 24px;
+      color: var(--error);
+      font-size: 0.85rem;
+    }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body data-page="preview">
+  <div id="site-nav"></div>
+  <div class="wrap">
+    <header class="page-hero">
+      <div>
+        <p class="eyebrow">Frame Lab</p>
+        <h1 class="page-title" id="pageTitle">Spritesheet <span>预览</span></h1>
+        <p class="meta-line" id="metaLine">加载中…</p>
+      </div>
+      <div class="header-actions">
+        <div class="badge">
+          <span>帧</span>
+          <strong id="frameBadge">— / —</strong>
+        </div>
+        <a class="btn" href="game.html?id=jack-attack" id="btnToGame">进游戏</a>
+        <a class="btn btn-primary" id="btnDownload" href="spritesheet-20f.gif" download="进击的JACK.gif">下载 GIF</a>
+      </div>
+    </header>
+
+    <div class="grid">
+      <div class="side-stack">
+        <section class="card">
+          <div class="card-hd">
+            <strong>逐帧播放</strong>
+            <div class="seg" id="bgSeg" title="舞台背景">
+              <button type="button" data-bg="dark" class="on">深色</button>
+              <button type="button" data-bg="light">白色</button>
+            </div>
+          </div>
+          <div class="stage bg-dark" id="playStage">
+            <canvas id="playCanvas" width="307" height="256"></canvas>
+          </div>
+          <div class="controls">
+            <button type="button" class="primary" id="btnPlay">播放</button>
+            <button type="button" id="btnPrev">上一帧</button>
+            <button type="button" id="btnNext">下一帧</button>
+            <div class="slider-group">
+              <label for="fps">FPS</label>
+              <input type="range" id="fps" min="1" max="30" value="10" />
+              <span class="val" id="fpsVal">10</span>
+            </div>
+            <div class="slider-group">
+              <label for="scrub">帧</label>
+              <input type="range" id="scrub" min="0" max="19" value="0" />
+              <span class="val" id="scrubVal">1</span>
+            </div>
+          </div>
+          <dl class="info" id="frameInfo">
+            <dt>名称</dt><dd id="iName">—</dd>
+            <dt>位置</dt><dd id="iPos">—</dd>
+            <dt>尺寸</dt><dd id="iSize">—</dd>
+            <dt>网格</dt><dd id="iGrid">5 × 4</dd>
+          </dl>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <strong>GIF 对照</strong>
+            <span id="gifLabel">spritesheet-20f.gif</span>
+          </div>
+          <div class="stage bg-dark" id="gifStage">
+            <img class="gif-preview" id="gifPreview" src="spritesheet-20f.gif" alt="20 帧 GIF 预览" />
+          </div>
+          <div class="controls">
+            <a class="btn btn-primary" id="btnDownload2" href="spritesheet-20f.gif" download="进击的JACK.gif">下载 GIF</a>
+            <span style="font-size:0.72rem;color:var(--muted)" id="gifMeta">约 282 KB · 304×253</span>
+          </div>
+        </section>
+      </div>
+
+      <div class="side-stack">
+        <section class="card">
+          <div class="card-hd">
+            <strong>图集 Atlas</strong>
+            <span>点击选帧 · 滚轮缩放</span>
+          </div>
+          <div class="atlas-wrap bg-dark" id="atlasWrap">
+            <canvas id="atlasCanvas"></canvas>
+          </div>
+        </section>
+
+        <section class="card">
+          <div class="card-hd">
+            <strong>全部帧</strong>
+            <span id="frameCountLabel">20</span>
+          </div>
+          <div class="frame-list" id="frameList"></div>
+        </section>
+      </div>
+    </div>
+
+    <p class="hint" id="hintLine">空格播放/暂停，← → 切帧。舞台背景可在深色 / 白色间切换。</p>
+  </div>
+  <div id="site-footer"></div>
+
+  <script src="sprites.js"></script>
+  <script src="nav.js"></script>
+  <script>
+    const params = new URLSearchParams(location.search);
+    const spriteId = params.get("id") || "jack-attack";
+    const catalog = window.SPRITE_CATALOG || [];
+    const sprite = catalog.find((s) => s.id === spriteId) || catalog.find((s) => s.ready) || {
+      id: "jack-attack",
+      name: "进击的JACK",
+      frames: 20,
+      grid: [5, 4],
+      gif: "spritesheet-20f.gif",
+      atlas: "atlas.png",
+      ready: true,
+    };
+
+    if (!sprite.ready || (!sprite.atlas && !sprite.gif)) {
+      location.replace("index.html");
+    }
+
+    const ATLAS_URL = sprite.atlas;
+    const GIF_ONLY = !sprite.atlas && !!sprite.gif;
+    const GIF_URL = sprite.gif || "spritesheet-20f.gif";
+    const COLS = sprite.grid?.[0] || 5;
+    const ROWS = sprite.grid?.[1] || 4;
+    const BLACK_KEY = 18; // 近黑抠透明阈值
+    const DOWNLOAD_NAME = `${sprite.name}.gif`;
+
+    document.title = `${sprite.name} · 街口连招`;
+    document.getElementById("pageTitle").innerHTML = `${sprite.name} <span>预览</span>`;
+    document.getElementById("gifPreview").src = GIF_URL;
+    document.getElementById("gifPreview").alt = `${sprite.name} GIF`;
+    document.getElementById("gifLabel").textContent = GIF_URL;
+    document.getElementById("btnDownload").href = GIF_URL;
+    document.getElementById("btnDownload").setAttribute("download", DOWNLOAD_NAME);
+    document.getElementById("btnDownload2").href = GIF_URL;
+    document.getElementById("btnDownload2").setAttribute("download", DOWNLOAD_NAME);
+    const btnToGame = document.getElementById("btnToGame");
+    if (sprite.playable) {
+      btnToGame.href = `game.html?id=${encodeURIComponent(sprite.id)}`;
+    } else {
+      btnToGame.style.display = "none";
+    }
+    document.getElementById("hintLine").textContent = GIF_ONLY
+      ? `「${sprite.name}」· GIF 动画预览 · 深色/白底可切换 · 可下载原文件`
+      : `「${sprite.name}」· ${COLS}×${ROWS} 网格 · 空格播放/暂停，← → 切帧。舞台背景可在深色 / 白色间切换。`;
+
+    if (GIF_ONLY) {
+      document.body.classList.add("gif-only");
+      document.getElementById("metaLine").textContent =
+        `${sprite.name} · GIF 约 ${sprite.frames || "?"} 帧 · ${GIF_URL}`;
+      document.getElementById("frameBadge").textContent = `${sprite.frames || "—"} 帧 GIF`;
+      // 用大图展示 GIF，隐藏图集逐帧工具
+      const playStage = document.getElementById("playStage");
+      playStage.innerHTML = `<img class="gif-preview" src="${GIF_URL}" alt="${sprite.name}" style="max-width:min(100%,420px);max-height:420px" />`;
+      document.querySelector(".controls")?.classList.add("hidden");
+      document.getElementById("frameInfo")?.classList.add("hidden");
+      document.querySelectorAll(".side-stack")[1]?.classList.add("hidden");
+      document.getElementById("bgSeg")?.addEventListener("click", (e) => {
+        const btn = e.target.closest("button[data-bg]");
+        if (!btn) return;
+        const mode = btn.dataset.bg;
+        playStage.classList.toggle("bg-dark", mode === "dark");
+        playStage.classList.toggle("bg-light", mode === "light");
+        document.getElementById("gifStage")?.classList.toggle("bg-dark", mode === "dark");
+        document.getElementById("gifStage")?.classList.toggle("bg-light", mode === "light");
+        document.querySelectorAll("#bgSeg button").forEach((b) => b.classList.toggle("on", b.dataset.bg === mode));
+      });
+    } else {
+    // —— 以下为图集逐帧模式 ——
+    const playCanvas = document.getElementById("playCanvas");
+    const playCtx = playCanvas.getContext("2d", { willReadFrequently: true });
+    playCtx.imageSmoothingEnabled = false;
+
+    const atlasCanvas = document.getElementById("atlasCanvas");
+    const atlasCtx = atlasCanvas.getContext("2d");
+    atlasCtx.imageSmoothingEnabled = false;
+
+    const els = {
+      metaLine: document.getElementById("metaLine"),
+      frameBadge: document.getElementById("frameBadge"),
+      btnPlay: document.getElementById("btnPlay"),
+      btnPrev: document.getElementById("btnPrev"),
+      btnNext: document.getElementById("btnNext"),
+      fps: document.getElementById("fps"),
+      fpsVal: document.getElementById("fpsVal"),
+      scrub: document.getElementById("scrub"),
+      scrubVal: document.getElementById("scrubVal"),
+      frameList: document.getElementById("frameList"),
+      frameCountLabel: document.getElementById("frameCountLabel"),
+      iName: document.getElementById("iName"),
+      iPos: document.getElementById("iPos"),
+      iSize: document.getElementById("iSize"),
+      iGrid: document.getElementById("iGrid"),
+      atlasWrap: document.getElementById("atlasWrap"),
+      playStage: document.getElementById("playStage"),
+      gifStage: document.getElementById("gifStage"),
+      bgSeg: document.getElementById("bgSeg"),
+    };
+
+    let frames = [];
+    let atlas = null;
+    let keyedAtlas = null;
+    let index = 0;
+    let playing = false;
+    let lastTick = 0;
+    let atlasScale = 0.45;
+    let stageBg = "dark";
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("无法加载 " + src));
+        img.src = src;
+      });
+    }
+
+    /** 把近黑像素抠成透明，便于白底预览 */
+    function makeKeyedAtlas(img) {
+      const c = document.createElement("canvas");
+      c.width = img.width;
+      c.height = img.height;
+      const ctx = c.getContext("2d", { willReadFrequently: true });
+      ctx.drawImage(img, 0, 0);
+      const data = ctx.getImageData(0, 0, c.width, c.height);
+      const d = data.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] <= BLACK_KEY && d[i + 1] <= BLACK_KEY && d[i + 2] <= BLACK_KEY) {
+          d[i + 3] = 0;
+        }
+      }
+      ctx.putImageData(data, 0, 0);
+      return c;
+    }
+
+    function buildGridFrames(img) {
+      const list = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          const x0 = Math.round((c * img.width) / COLS);
+          const x1 = Math.round(((c + 1) * img.width) / COLS);
+          const y0 = Math.round((r * img.height) / ROWS);
+          const y1 = Math.round(((r + 1) * img.height) / ROWS);
+          const i = r * COLS + c;
+          list.push({
+            name: `frame_${String(i + 1).padStart(3, "0")}`,
+            col: c,
+            row: r,
+            x: x0,
+            y: y0,
+            w: x1 - x0,
+            h: y1 - y0,
+          });
+        }
+      }
+      return list;
+    }
+
+    function sourceImage() {
+      return keyedAtlas || atlas;
+    }
+
+    function drawFrame() {
+      const f = frames[index];
+      if (!f || !atlas) return;
+      const src = sourceImage();
+
+      playCanvas.width = f.w;
+      playCanvas.height = f.h;
+      playCtx.imageSmoothingEnabled = false;
+      playCtx.fillStyle = stageBg === "light" ? "#ffffff" : "#0a1a1a";
+      playCtx.fillRect(0, 0, f.w, f.h);
+      playCtx.drawImage(src, f.x, f.y, f.w, f.h, 0, 0, f.w, f.h);
+
+      els.frameBadge.textContent = `${index + 1} / ${frames.length}`;
+      els.scrub.value = String(index);
+      els.scrubVal.textContent = String(index + 1);
+      els.iName.textContent = f.name;
+      els.iPos.textContent = `x ${f.x}, y ${f.y} · 列${f.col + 1} 行${f.row + 1}`;
+      els.iSize.textContent = `${f.w} × ${f.h}`;
+      els.iGrid.textContent = `${COLS} × ${ROWS}`;
+
+      document.querySelectorAll(".frame-chip").forEach((el, i) => {
+        el.classList.toggle("current", i === index);
+      });
+
+      drawAtlas();
+    }
+
+    function drawAtlas() {
+      if (!atlas || !frames.length) return;
+      const src = sourceImage();
+      const w = Math.round(atlas.width * atlasScale);
+      const h = Math.round(atlas.height * atlasScale);
+      atlasCanvas.width = w;
+      atlasCanvas.height = h;
+      atlasCtx.imageSmoothingEnabled = false;
+      atlasCtx.fillStyle = stageBg === "light" ? "#ffffff" : "#0a1a1a";
+      atlasCtx.fillRect(0, 0, w, h);
+
+      atlasCtx.drawImage(src, 0, 0, w, h);
+
+      frames.forEach((f, i) => {
+        const x = f.x * atlasScale;
+        const y = f.y * atlasScale;
+        const fw = f.w * atlasScale;
+        const fh = f.h * atlasScale;
+        const active = i === index;
+        atlasCtx.strokeStyle = active ? "#ff4d8b" : "rgba(26, 58, 58, 0.45)";
+        atlasCtx.lineWidth = active ? 2.5 : 1;
+        atlasCtx.strokeRect(x + 0.5, y + 0.5, fw - 1, fh - 1);
+        if (active) {
+          atlasCtx.fillStyle = "rgba(255, 77, 139, 0.14)";
+          atlasCtx.fillRect(x, y, fw, fh);
+        }
+        atlasCtx.fillStyle = active ? "#e8b94a" : stageBg === "light" ? "rgba(10,10,10,0.8)" : "rgba(255,255,255,0.8)";
+        atlasCtx.font = `${Math.max(9, 10 * atlasScale)}px Inter, sans-serif`;
+        atlasCtx.fillText(String(i + 1), x + 3, y + 12);
+      });
+    }
+
+    function buildThumbs() {
+      els.frameList.innerHTML = "";
+      const src = sourceImage();
+      frames.forEach((f, i) => {
+        const chip = document.createElement("button");
+        chip.type = "button";
+        chip.className = "frame-chip" + (i === 0 ? " current" : "");
+        chip.title = f.name;
+
+        const c = document.createElement("canvas");
+        c.className = "thumb bg-" + stageBg;
+        c.width = 56;
+        c.height = 48;
+        const ctx = c.getContext("2d");
+        ctx.imageSmoothingEnabled = false;
+        const scale = Math.min(56 / f.w, 48 / f.h);
+        const dw = Math.round(f.w * scale);
+        const dh = Math.round(f.h * scale);
+        const dx = Math.floor((56 - dw) / 2);
+        const dy = Math.floor((48 - dh) / 2);
+        ctx.drawImage(src, f.x, f.y, f.w, f.h, dx, dy, dw, dh);
+
+        const name = document.createElement("div");
+        name.className = "name";
+        name.textContent = String(i + 1).padStart(2, "0");
+
+        chip.appendChild(c);
+        chip.appendChild(name);
+        chip.addEventListener("click", () => {
+          index = i;
+          drawFrame();
+        });
+        els.frameList.appendChild(chip);
+      });
+    }
+
+    function applyStageBg(mode) {
+      stageBg = mode;
+      els.playStage.classList.toggle("bg-dark", mode === "dark");
+      els.playStage.classList.toggle("bg-light", mode === "light");
+      els.gifStage.classList.toggle("bg-dark", mode === "dark");
+      els.gifStage.classList.toggle("bg-light", mode === "light");
+      els.atlasWrap.classList.toggle("bg-dark", mode === "dark");
+      els.atlasWrap.classList.toggle("bg-light", mode === "light");
+      els.bgSeg.querySelectorAll("button").forEach((btn) => {
+        btn.classList.toggle("on", btn.dataset.bg === mode);
+      });
+      buildThumbs();
+      drawFrame();
+    }
+
+    function setPlaying(on) {
+      playing = on;
+      els.btnPlay.textContent = playing ? "暂停" : "播放";
+      els.btnPlay.classList.toggle("active", playing);
+      if (playing) lastTick = performance.now();
+    }
+
+    function tick(now) {
+      if (playing && frames.length) {
+        const interval = 1000 / Number(els.fps.value);
+        if (now - lastTick >= interval) {
+          lastTick = now;
+          index = (index + 1) % frames.length;
+          drawFrame();
+        }
+      }
+      requestAnimationFrame(tick);
+    }
+
+    function hitTestAtlas(clientX, clientY) {
+      const rect = atlasCanvas.getBoundingClientRect();
+      const x = (clientX - rect.left) / atlasScale;
+      const y = (clientY - rect.top) / atlasScale;
+      for (let i = frames.length - 1; i >= 0; i--) {
+        const f = frames[i];
+        if (x >= f.x && x < f.x + f.w && y >= f.y && y < f.y + f.h) return i;
+      }
+      return -1;
+    }
+
+    async function main() {
+      try {
+        atlas = await loadImage(ATLAS_URL);
+        keyedAtlas = makeKeyedAtlas(atlas);
+        frames = buildGridFrames(atlas);
+
+        els.metaLine.textContent =
+          `${sprite.name} · ${frames.length} 帧 · 图集 ${atlas.width}×${atlas.height} · 网格 ${COLS}×${ROWS}`;
+        els.frameCountLabel.textContent = `${frames.length} 帧`;
+        els.scrub.max = String(Math.max(0, frames.length - 1));
+
+        buildThumbs();
+        drawFrame();
+        requestAnimationFrame(tick);
+      } catch (err) {
+        els.metaLine.textContent = err.message;
+        document.querySelector(".grid").innerHTML =
+          `<div class="card"><p class="err">${err.message}<br/>请用本地服务器打开（例如 <code>python3 -m http.server</code>）。</p></div>`;
+      }
+    }
+
+    els.btnPlay.addEventListener("click", () => setPlaying(!playing));
+    els.btnPrev.addEventListener("click", () => {
+      setPlaying(false);
+      index = (index - 1 + frames.length) % frames.length;
+      drawFrame();
+    });
+    els.btnNext.addEventListener("click", () => {
+      setPlaying(false);
+      index = (index + 1) % frames.length;
+      drawFrame();
+    });
+    els.fps.addEventListener("input", () => {
+      els.fpsVal.textContent = els.fps.value;
+    });
+    els.scrub.addEventListener("input", () => {
+      setPlaying(false);
+      index = Number(els.scrub.value);
+      drawFrame();
+    });
+
+    els.bgSeg.addEventListener("click", (e) => {
+      const btn = e.target.closest("button[data-bg]");
+      if (!btn) return;
+      applyStageBg(btn.dataset.bg);
+    });
+
+    atlasCanvas.addEventListener("click", (e) => {
+      const i = hitTestAtlas(e.clientX, e.clientY);
+      if (i >= 0) {
+        setPlaying(false);
+        index = i;
+        drawFrame();
+      }
+    });
+
+    els.atlasWrap.addEventListener(
+      "wheel",
+      (e) => {
+        e.preventDefault();
+        const dir = e.deltaY > 0 ? -1 : 1;
+        atlasScale = Math.min(1.5, Math.max(0.2, atlasScale + dir * 0.08));
+        drawAtlas();
+      },
+      { passive: false }
+    );
+
+    window.addEventListener("keydown", (e) => {
+      if (e.target.matches("input, textarea, button, a")) return;
+      if (e.code === "Space") {
+        e.preventDefault();
+        setPlaying(!playing);
+      } else if (e.code === "ArrowLeft") {
+        e.preventDefault();
+        setPlaying(false);
+        index = (index - 1 + frames.length) % frames.length;
+        drawFrame();
+      } else if (e.code === "ArrowRight") {
+        e.preventDefault();
+        setPlaying(false);
+        index = (index + 1) % frames.length;
+        drawFrame();
+      }
+    });
+
+    main();
+    } // end atlas mode
+  </script>
+</body>
+</html>

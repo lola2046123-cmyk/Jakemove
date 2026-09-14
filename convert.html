@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>图集转 GIF · 跳转 SpritePacker</title>
+  <meta http-equiv="refresh" content="0; url=https://spritepacker.app/tools/sprite-sheet-to-gif" />
+  <link rel="canonical" href="https://spritepacker.app/tools/sprite-sheet-to-gif" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site.css" />
+  <style>
+    .jump {
+      max-width: 520px;
+      margin: 64px auto;
+      text-align: center;
+      padding: 40px 28px;
+      background: var(--surface-soft);
+      border-radius: var(--radius-xl);
+    }
+    .jump h1 {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 1.75rem;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      margin-bottom: 12px;
+    }
+    .jump p { color: var(--body); font-size: 15px; margin-bottom: 22px; line-height: 1.55; }
+  </style>
+</head>
+<body data-page="convert">
+  <div id="site-nav"></div>
+  <main class="wrap">
+    <div class="jump">
+      <h1>正在打开 SpritePacker</h1>
+      <p>本站「图集转 GIF」已接入 <strong>SpritePacker · Sprite Sheet → GIF</strong>：浏览器内切帧导出动画 GIF，素材不上云。</p>
+      <a class="btn btn-primary" href="https://spritepacker.app/tools/sprite-sheet-to-gif" target="_blank" rel="noopener noreferrer">立即前往工具页 ↗</a>
+    </div>
+  </main>
+  <div id="site-footer"></div>
+  <script src="nav.js"></script>
+  <script>
+    // 若 meta refresh 被拦截，仍尝试打开
+    setTimeout(function () {
+      if (document.visibilityState === "visible") {
+        window.location.replace("https://spritepacker.app/tools/sprite-sheet-to-gif");
+      }
+    }, 80);
+  </script>
+</body>
+</html>

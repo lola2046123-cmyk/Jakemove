@@ -1,13 +1,393 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SkillDock · Prompt Skill 库</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="/src/main.tsx"></script>
-  </body>
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>街口连招 · Jack Street</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site.css" />
+  <style>
+    .hero {
+      display: grid;
+      grid-template-columns: 1.15fr 0.85fr;
+      gap: var(--space-xl);
+      align-items: center;
+      padding: var(--space-xxl) 0 var(--space-section);
+    }
+
+    @media (max-width: 860px) {
+      .hero {
+        grid-template-columns: 1fr;
+        padding: var(--space-xl) 0 var(--space-xxl);
+      }
+    }
+
+    .hero-copy h1 {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: clamp(2.4rem, 6vw, 4.5rem);
+      letter-spacing: -0.05em;
+      line-height: 1.02;
+      margin-top: 6px;
+      color: var(--ink);
+    }
+
+    .hero-copy h1 em {
+      font-style: normal;
+      color: var(--ink);
+    }
+
+    .hero-copy .lead {
+      font-size: 16px;
+      color: var(--body);
+      margin-top: 16px;
+      max-width: 34em;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 28px;
+    }
+
+    .hero-meta {
+      margin-top: 22px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .hero-meta .badge-pill strong {
+      font-weight: 600;
+    }
+
+    .hero-stage {
+      position: relative;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      min-height: 320px;
+      background: var(--surface-soft);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hero-stage::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 30% 40%, rgba(255, 176, 132, 0.55), transparent 55%),
+        radial-gradient(circle at 75% 60%, rgba(184, 164, 237, 0.45), transparent 50%);
+    }
+
+    .hero-stage img {
+      position: relative;
+      z-index: 1;
+      max-width: 62%;
+      max-height: 78%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      filter: drop-shadow(0 18px 28px rgba(10, 10, 10, 0.18));
+      animation: floaty 3.2s ease-in-out infinite;
+    }
+
+    @keyframes floaty {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    .hero-chip {
+      position: absolute;
+      z-index: 2;
+      left: 16px;
+      bottom: 16px;
+      padding: 6px 14px;
+      border-radius: var(--radius-pill);
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 500;
+      border: 1px solid var(--hairline);
+    }
+
+    .hero-chip b { font-weight: 600; }
+
+    .section-hd {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    .section-hd h2 {
+      font-family: var(--font-display);
+      font-size: clamp(1.75rem, 3vw, 2.5rem);
+      font-weight: 500;
+      letter-spacing: -0.04em;
+      color: var(--ink);
+      line-height: 1.1;
+    }
+
+    .section-hd p {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .gallery {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 16px;
+    }
+
+    .card {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      color: inherit;
+    }
+
+    .card.locked { opacity: 0.72; }
+
+    .thumb {
+      position: relative;
+      aspect-ratio: 1.15;
+      background: var(--surface-dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .thumb img {
+      max-width: 72%;
+      max-height: 78%;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+    }
+
+    .ph {
+      width: 56%;
+      aspect-ratio: 1;
+      border-radius: var(--radius-lg);
+      border: 1px dashed rgba(255,255,255,0.22);
+      display: grid;
+      place-items: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      background:
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 6px,
+          rgba(255,255,255,0.04) 6px,
+          rgba(255,255,255,0.04) 12px
+        );
+    }
+
+    .ph span {
+      padding: 6px 10px;
+      border-radius: var(--radius-pill);
+      background: rgba(0,0,0,0.35);
+    }
+
+    .badge-ready,
+    .badge-soon {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: var(--radius-pill);
+    }
+
+    .badge-ready {
+      background: var(--brand-ochre);
+      color: var(--ink);
+    }
+
+    .badge-soon {
+      background: rgba(255,255,255,0.12);
+      color: rgba(255,255,255,0.75);
+      border: 1px solid rgba(255,255,255,0.18);
+    }
+
+    .body {
+      padding: 20px 20px 22px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background: var(--canvas);
+      border-top: 1px solid var(--hairline);
+      flex: 1;
+    }
+
+    .body h3 {
+      font-size: 18px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--ink);
+    }
+
+    .body p {
+      font-size: 14px;
+      color: var(--muted);
+    }
+
+    .card-actions {
+      margin-top: auto;
+      padding-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+
+    .card-actions .links {
+      display: flex;
+      gap: 12px;
+    }
+
+    .card-actions a {
+      color: var(--ink);
+      font-weight: 600;
+      text-decoration: underline;
+      text-underline-offset: 3px;
+    }
+
+    .feature-strip {
+      margin: 0 0 var(--space-section);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    @media (max-width: 720px) {
+      .feature-strip { grid-template-columns: 1fr; }
+    }
+
+    #roster {
+      margin-top: 0;
+      padding-bottom: var(--space-section);
+      scroll-margin-top: 84px;
+    }
+  </style>
+</head>
+<body data-page="home">
+  <div id="site-nav"></div>
+
+  <main class="wrap">
+    <section class="hero" aria-label="游戏介绍">
+      <div class="hero-copy">
+        <p class="eyebrow">Pixel Action Preview</p>
+        <h1>一局街口<br /><em>连招预览</em></h1>
+        <p class="lead">用动作库里的角色上场开打。当前主推「进击的JACK」——冲刺、出拳、踢击、滑步躲闪，一站式检视动画手感。</p>
+        <div class="hero-actions">
+          <a class="btn btn-primary" href="game.html?id=jack-attack">开始游戏</a>
+          <a class="btn btn-secondary" href="#roster">浏览动作库</a>
+          <a class="btn btn-text" href="https://spritepacker.app/tools/sprite-sheet-to-gif" target="_blank" rel="noopener noreferrer">图集转 GIF ↗</a>
+        </div>
+        <div class="hero-meta">
+          <span class="badge-pill">角色 <strong>进击的JACK</strong></span>
+          <span class="badge-pill">帧数 <strong>20</strong></span>
+          <span class="badge-pill">模式 <strong>5 波清街</strong></span>
+        </div>
+      </div>
+      <div class="hero-stage">
+        <img src="spritesheet-20f.gif" alt="进击的JACK 动画" />
+        <div class="hero-chip">正在展示 · <b>进击的JACK</b></div>
+      </div>
+    </section>
+
+    <div class="feature-strip">
+      <div class="feature-card feature-card--pink">
+        <b>动作库换角</b>
+        <span>游戏内可切换已导入角色，即时预览不同 GIF 动作包。</span>
+      </div>
+      <div class="feature-card feature-card--teal">
+        <b>逐帧检视</b>
+        <span>图集高亮、FPS 调节、深色/白底舞台，方便核对每一帧。</span>
+      </div>
+      <div class="feature-card feature-card--peach">
+        <b>图集转 GIF</b>
+        <span>接入成熟工具 SpritePacker：打包图集、诊断帧质量、导出 GIF / 引擎坐标。</span>
+      </div>
+    </div>
+
+    <section id="roster">
+      <div class="section-hd">
+        <div>
+          <p class="eyebrow">Roster</p>
+          <h2>角色动作库</h2>
+        </div>
+        <p>点「进游戏」用该角色开打 · 点「预览」查看图集</p>
+      </div>
+      <div class="gallery" id="gallery"></div>
+    </section>
+  </main>
+
+  <div id="site-footer"></div>
+
+  <script src="sprites.js"></script>
+  <script src="nav.js"></script>
+  <script>
+    const gallery = document.getElementById("gallery");
+
+    function cardHTML(item) {
+      const previewHref = item.ready ? `preview.html?id=${encodeURIComponent(item.id)}` : null;
+      const gameHref = item.playable ? `game.html?id=${encodeURIComponent(item.id)}` : null;
+      const locked = item.ready ? "" : " locked";
+      const badge = item.ready
+        ? `<span class="badge-ready">${item.playable ? "可玩" : "可预览"}</span>`
+        : `<span class="badge-soon">占位</span>`;
+      const media = item.gif
+        ? `<img src="${item.gif}" alt="${item.name}" />`
+        : `<div class="ph"><span>GIF</span></div>`;
+
+      const links = item.ready
+        ? `<div class="links">
+             <a href="${previewHref}">预览</a>
+             ${gameHref ? `<a href="${gameHref}">进游戏</a>` : `<span>仅 GIF</span>`}
+             <a href="https://spritepacker.app/tools/sprite-sheet-to-gif" target="_blank" rel="noopener noreferrer">转GIF↗</a>
+           </div>`
+        : `<span>即将上架</span>`;
+
+      const metaBits = item.atlas
+        ? `${item.frames} 帧 · ${item.grid[0]}×${item.grid[1]}`
+        : `${item.frames} 帧 · GIF`;
+
+      return `
+        <article class="card${locked}">
+          <div class="thumb">${badge}${media}</div>
+          <div class="body">
+            <h3>${item.name}</h3>
+            <p>${item.blurb}</p>
+            <div class="card-actions">
+              <span>${metaBits}</span>
+              ${links}
+            </div>
+          </div>
+        </article>`;
+    }
+
+    gallery.innerHTML = (window.SPRITE_CATALOG || []).map(cardHTML).join("");
+  </script>
+</body>
 </html>
