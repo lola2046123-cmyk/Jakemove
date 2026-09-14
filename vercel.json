@@ -1,0 +1,8 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "installCommand": "",
+  "buildCommand": "mkdir -p public && cp -f index.html preview.html game.html convert.html nav.js site.css sprites.js atlas.png spritesheet-20f.gif Run1.gif shanbai.gif public/",
+  "outputDirectory": "public",
+  "cleanUrls": true
+}

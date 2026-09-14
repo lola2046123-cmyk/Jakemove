@@ -1,0 +1,1230 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>街口连招 · 游戏</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="site.css" />
+  <style>
+    .page-hero { margin-bottom: var(--space-lg); }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 1fr 260px;
+      gap: 16px;
+      align-items: start;
+    }
+
+    @media (max-width: 860px) {
+      .layout { grid-template-columns: 1fr; }
+    }
+
+    .stage-card {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .hud {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px 18px;
+      align-items: center;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--surface-soft);
+      font-size: 13px;
+      color: var(--body);
+    }
+
+    .hud strong {
+      font-variant-numeric: tabular-nums;
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .hpbar {
+      flex: 1;
+      min-width: 120px;
+      height: 10px;
+      background: var(--surface-strong);
+      border-radius: var(--radius-pill);
+      overflow: hidden;
+    }
+
+    .hpbar > i {
+      display: block;
+      height: 100%;
+      width: 100%;
+      background: var(--brand-coral);
+      transition: width 0.15s;
+    }
+
+    .canvas-wrap {
+      position: relative;
+      background: var(--surface-dark);
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #hitOverlay {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 170px;
+      height: auto;
+      pointer-events: none;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      display: none;
+      transform: translate(-50%, -92%);
+      z-index: 3;
+      filter: drop-shadow(0 8px 12px rgba(0,0,0,0.35));
+    }
+
+    #hitOverlay.is-on { display: block; }
+
+    canvas#game {
+      display: block;
+      width: 100%;
+      height: auto;
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    .stage-card:fullscreen,
+    .stage-card:-webkit-full-screen {
+      width: 100vw;
+      height: 100vh;
+      max-width: none;
+      border-radius: 0;
+      border: 0;
+      background: var(--surface-dark);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .stage-card:fullscreen .canvas-wrap,
+    .stage-card:-webkit-full-screen .canvas-wrap {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .stage-card:fullscreen canvas#game,
+    .stage-card:-webkit-full-screen canvas#game {
+      width: auto;
+      height: auto;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+    }
+
+    .stage-card:fullscreen .hud,
+    .stage-card:-webkit-full-screen .hud,
+    .stage-card:fullscreen .controls-bar,
+    .stage-card:-webkit-full-screen .controls-bar,
+    .stage-card:fullscreen .touch-pad,
+    .stage-card:-webkit-full-screen .touch-pad {
+      background: var(--surface-dark-elevated);
+      border-color: #243434;
+      color: var(--on-dark-soft);
+    }
+
+    .stage-card:fullscreen .hud strong,
+    .stage-card:-webkit-full-screen .hud strong {
+      color: var(--on-dark);
+    }
+
+    .stage-card:fullscreen .controls-bar button:not(.primary),
+    .stage-card:-webkit-full-screen .controls-bar button:not(.primary),
+    .stage-card:fullscreen .touch-pad button,
+    .stage-card:-webkit-full-screen .touch-pad button {
+      background: var(--surface-dark);
+      color: var(--on-dark);
+      border-color: #2a3a3a;
+    }
+
+    .fs-hint {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
+    .stage-card:fullscreen .fs-hint,
+    .stage-card:-webkit-full-screen .fs-hint {
+      color: var(--on-dark-soft);
+    }
+
+    .stage-card:fullscreen .touch-pad,
+    .stage-card:-webkit-full-screen .touch-pad {
+      display: grid;
+    }
+
+    @media (min-width: 861px) {
+      .stage-card:fullscreen .touch-pad,
+      .stage-card:-webkit-full-screen .touch-pad {
+        display: none;
+      }
+    }
+
+    .overlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      background: rgba(10, 26, 26, 0.78);
+      color: var(--on-dark);
+      text-align: center;
+      padding: 24px;
+    }
+
+    .overlay.hidden { display: none; }
+
+    .overlay h2 {
+      font-family: var(--font-display);
+      font-weight: 500;
+      font-size: 2rem;
+      letter-spacing: -0.04em;
+    }
+
+    .overlay p { font-size: 14px; color: var(--on-dark-soft); max-width: 28em; }
+
+    .controls-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      padding: 12px 14px;
+      border-top: 1px solid var(--hairline);
+      background: var(--canvas);
+    }
+
+    .controls-bar button,
+    .touch-pad button,
+    .overlay button {
+      font: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--hairline);
+      background: var(--canvas);
+      color: var(--ink);
+      padding: 10px 16px;
+      border-radius: var(--radius-md);
+      height: 44px;
+    }
+
+    .controls-bar button:hover,
+    .touch-pad button:hover { border-color: var(--ink); }
+
+    .controls-bar button.primary,
+    .overlay button.primary {
+      background: var(--primary);
+      color: var(--on-primary);
+      border-color: var(--primary);
+    }
+
+    .touch-pad {
+      display: none;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      padding: 0 14px 14px;
+      background: var(--canvas);
+    }
+
+    @media (max-width: 860px) {
+      .touch-pad { display: grid; }
+    }
+
+    .touch-pad button {
+      padding: 14px 8px;
+      font-size: 13px;
+      height: auto;
+    }
+
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .panel {
+      background: var(--canvas);
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+
+    .panel h3 {
+      font-size: 16px;
+      font-weight: 600;
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--hairline);
+      background: var(--surface-soft);
+      color: var(--ink);
+    }
+
+    .char-list {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      padding: 10px;
+      max-height: 360px;
+      overflow: auto;
+    }
+
+    .char {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 10px;
+      align-items: center;
+      padding: 8px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-md);
+      background: var(--surface-soft);
+      cursor: pointer;
+      text-align: left;
+      width: 100%;
+      font: inherit;
+      color: inherit;
+    }
+
+    .char:hover { border-color: var(--ink); }
+    .char.on {
+      border-color: var(--ink);
+      background: var(--surface-card);
+    }
+
+    .char.locked {
+      opacity: 0.55;
+      cursor: not-allowed;
+    }
+
+    .char .mini {
+      width: 56px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-dark);
+      object-fit: contain;
+      image-rendering: pixelated;
+    }
+
+    .char .ph {
+      width: 56px;
+      height: 48px;
+      border-radius: var(--radius-sm);
+      background: var(--surface-dark-elevated);
+      display: grid;
+      place-items: center;
+      color: var(--on-dark-soft);
+      font-size: 10px;
+      font-weight: 600;
+    }
+
+    .char .name {
+      font-weight: 600;
+      font-size: 15px;
+      color: var(--ink);
+    }
+
+    .char .sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-top: 2px;
+    }
+
+    .help {
+      padding: 14px 16px 16px;
+      font-size: 13px;
+      color: var(--muted);
+      display: grid;
+      gap: 8px;
+    }
+
+    .help kbd {
+      display: inline-block;
+      padding: 2px 7px;
+      border: 1px solid var(--hairline);
+      border-radius: var(--radius-xs);
+      background: var(--surface-card);
+      color: var(--ink);
+      font-size: 12px;
+      font-family: inherit;
+    }
+  </style>
+</head>
+<body data-page="game">
+  <div id="site-nav"></div>
+
+  <div class="wrap">
+    <header class="page-hero">
+      <div>
+        <p class="eyebrow">Arcade Preview</p>
+        <h1 class="page-title">街口<span>连招</span></h1>
+        <p class="lead">一局简单波次对战。用动作库角色预览连招手感：移动、冲刺、拳、踢、滑步。右侧换角即时生效。</p>
+      </div>
+      <a class="btn" href="preview.html?id=jack-attack" id="btnToPreview">逐帧预览</a>
+    </header>
+
+    <div class="layout">
+      <section class="stage-card" id="gameShell">
+        <div class="hud">
+          <span>角色 <strong id="hudName">—</strong></span>
+          <span>波次 <strong id="hudWave">1</strong></span>
+          <span>得分 <strong id="hudScore">0</strong></span>
+          <span style="display:flex;align-items:center;gap:8px;flex:1;min-width:140px">
+            HP
+            <div class="hpbar"><i id="hudHp"></i></div>
+          </span>
+        </div>
+
+        <div class="canvas-wrap">
+          <canvas id="game" width="800" height="420"></canvas>
+          <img id="hitOverlay" alt="" aria-hidden="true" />
+          <div class="overlay" id="overlay">
+            <h2 id="overlayTitle">街口连招</h2>
+            <p id="overlayText">挡住从右侧涌来的影武者。换角后可直接开局预览不同动作库。</p>
+            <button type="button" class="primary" id="btnStart">开始游戏</button>
+          </div>
+        </div>
+
+        <div class="controls-bar">
+          <button type="button" class="primary" id="btnRestart">重新开始</button>
+          <button type="button" id="btnPause">暂停</button>
+          <button type="button" id="btnFullscreen" title="全屏 (F)">全屏</button>
+          <span class="fs-hint" id="fsHint">F 全屏 · Esc 退出全屏</span>
+        </div>
+
+        <div class="touch-pad">
+          <button type="button" data-key="ArrowLeft">← 左</button>
+          <button type="button" data-key="ArrowRight">右 →</button>
+          <button type="button" data-key="KeyZ">拳 Z</button>
+          <button type="button" data-key="KeyX">踢 X</button>
+        </div>
+      </section>
+
+      <aside class="side">
+        <div class="panel">
+          <h3>动作库换角</h3>
+          <div class="char-list" id="charList"></div>
+        </div>
+        <div class="panel">
+          <h3>操作</h3>
+          <div class="help">
+            <div><kbd>A</kbd>/<kbd>D</kbd> 或方向键 · 移动（长按出冲刺帧）</div>
+            <div><kbd>Z</kbd> / <kbd>J</kbd> · 出拳</div>
+            <div><kbd>X</kbd> / <kbd>K</kbd> · 踢击</div>
+            <div><kbd>S</kbd> / <kbd>↓</kbd> · 滑步（短暂无敌）</div>
+            <div>受击时播放动作库「受击闪白」GIF</div>
+            <div><kbd>Space</kbd> · 暂停</div>
+            <div><kbd>F</kbd> · 全屏 · <kbd>Esc</kbd> 退出全屏</div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+
+  <div id="site-footer"></div>
+
+  <script src="sprites.js"></script>
+  <script src="nav.js"></script>
+  <script>
+    const BLACK_KEY = 18;
+    const W = 800;
+    const H = 420;
+    const GROUND = 340;
+    const SCALE = 1.35;
+
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+    ctx.imageSmoothingEnabled = false;
+
+    const els = {
+      hudName: document.getElementById("hudName"),
+      hudWave: document.getElementById("hudWave"),
+      hudScore: document.getElementById("hudScore"),
+      hudHp: document.getElementById("hudHp"),
+      overlay: document.getElementById("overlay"),
+      overlayTitle: document.getElementById("overlayTitle"),
+      overlayText: document.getElementById("overlayText"),
+      btnStart: document.getElementById("btnStart"),
+      btnRestart: document.getElementById("btnRestart"),
+      btnPause: document.getElementById("btnPause"),
+      btnFullscreen: document.getElementById("btnFullscreen"),
+      fsHint: document.getElementById("fsHint"),
+      gameShell: document.getElementById("gameShell"),
+      hitOverlay: document.getElementById("hitOverlay"),
+      charList: document.getElementById("charList"),
+    };
+
+    const keys = new Set();
+    const atlasCache = new Map();
+
+    let sprite = null;
+    let keyedAtlas = null;
+    let frameRects = [];
+    let state = "title"; // title | playing | paused | win | lose
+    let last = 0;
+
+    const game = {
+      score: 0,
+      wave: 1,
+      spawnTimer: 0,
+      waveClearDelay: 0,
+      enemiesLeft: 0,
+      fx: [],
+      enemies: [],
+      player: null,
+    };
+
+    function loadImage(src) {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.onerror = () => reject(new Error("无法加载 " + src));
+        img.src = src;
+      });
+    }
+
+    function makeKeyedAtlas(img) {
+      const c = document.createElement("canvas");
+      c.width = img.width;
+      c.height = img.height;
+      const cctx = c.getContext("2d", { willReadFrequently: true });
+      cctx.drawImage(img, 0, 0);
+      const data = cctx.getImageData(0, 0, c.width, c.height);
+      const d = data.data;
+      for (let i = 0; i < d.length; i += 4) {
+        if (d[i] <= BLACK_KEY && d[i + 1] <= BLACK_KEY && d[i + 2] <= BLACK_KEY) d[i + 3] = 0;
+      }
+      cctx.putImageData(data, 0, 0);
+      return c;
+    }
+
+    function buildFrameRects(img, cols, rows) {
+      const list = [];
+      for (let r = 0; r < rows; r++) {
+        for (let c = 0; c < cols; c++) {
+          const x0 = Math.round((c * img.width) / cols);
+          const x1 = Math.round(((c + 1) * img.width) / cols);
+          const y0 = Math.round((r * img.height) / rows);
+          const y1 = Math.round(((r + 1) * img.height) / rows);
+          list.push({ x: x0, y: y0, w: x1 - x0, h: y1 - y0 });
+        }
+      }
+      return list;
+    }
+
+    async function ensureAtlas(item) {
+      if (atlasCache.has(item.id)) return atlasCache.get(item.id);
+      const img = await loadImage(item.atlas);
+      const keyed = makeKeyedAtlas(img);
+      const rects = buildFrameRects(img, item.grid[0], item.grid[1]);
+      const pack = { img, keyed, rects };
+      atlasCache.set(item.id, pack);
+      return pack;
+    }
+
+    function createPlayer() {
+      els.hitOverlay.classList.remove("is-on");
+      return {
+        x: 180,
+        y: GROUND,
+        vx: 0,
+        facing: 1,
+        hp: 100,
+        maxHp: 100,
+        invuln: 0,
+        clip: "idle",
+        frameI: 0,
+        frameT: 0,
+        busy: false,
+        hitDone: new Set(),
+        attackBox: null,
+        useHitGif: false,
+        hitGifTimer: null,
+      };
+    }
+
+    function setClip(p, name, busy = false) {
+      if (p.clip === name && busy === p.busy) return;
+      p.clip = name;
+      p.frameI = 0;
+      p.frameT = 0;
+      p.busy = busy;
+      p.hitDone = new Set();
+      p.attackBox = null;
+      p.hitGifTimer = null;
+      if (name === "hit") {
+        const gif = resolveHitGif();
+        if (gif) {
+          p.hitGifTimer = 0.7;
+          p.useHitGif = true;
+          // 重载 src 以重播 GIF
+          els.hitOverlay.src = `${gif}?t=${Date.now()}`;
+          els.hitOverlay.classList.add("is-on");
+        } else {
+          p.useHitGif = false;
+          els.hitOverlay.classList.remove("is-on");
+        }
+      } else {
+        p.useHitGif = false;
+        els.hitOverlay.classList.remove("is-on");
+      }
+    }
+
+    function resolveHitGif() {
+      if (sprite?.hitGif) return sprite.hitGif;
+      const hitItem = (window.SPRITE_CATALOG || []).find((s) => s.role === "hit" && s.gif);
+      return hitItem?.gif || null;
+    }
+
+    function syncHitOverlay() {
+      const p = game.player;
+      const ov = els.hitOverlay;
+      if (!p || !p.useHitGif || p.clip !== "hit") {
+        ov.classList.remove("is-on");
+        return;
+      }
+      const rect = canvas.getBoundingClientRect();
+      const wrap = canvas.parentElement.getBoundingClientRect();
+      const scaleX = rect.width / W;
+      const scaleY = rect.height / H;
+      const left = rect.left - wrap.left + p.x * scaleX;
+      const top = rect.top - wrap.top + p.y * scaleY;
+      ov.style.left = `${left}px`;
+      ov.style.top = `${top}px`;
+      ov.style.width = `${Math.max(120, 200 * scaleX)}px`;
+      ov.style.transform = `translate(-50%, -92%) scaleX(${p.facing})`;
+      ov.classList.add("is-on");
+    }
+
+    function currentFrameIndex(p) {
+      const anims = sprite.anims || {};
+      const seq = anims[p.clip] || anims.idle || [0];
+      return seq[Math.min(p.frameI, seq.length - 1)];
+    }
+
+    function advanceAnim(p, dt) {
+      if (p.clip === "hit" && p.useHitGif && p.hitGifTimer != null) {
+        p.hitGifTimer -= dt;
+        if (p.hitGifTimer <= 0) {
+          setClip(p, "idle", false);
+        }
+        return;
+      }
+      const anims = sprite.anims || {};
+      const seq = anims[p.clip] || anims.idle || [0];
+      const fps =
+        p.clip === "idle" ? 6 :
+        p.clip === "dash" ? 10 :
+        p.clip === "victory" ? 5 : 12;
+      p.frameT += dt;
+      const step = 1 / fps;
+      while (p.frameT >= step) {
+        p.frameT -= step;
+        p.frameI += 1;
+        if (p.frameI >= seq.length) {
+          if (p.busy && p.clip !== "victory") {
+            setClip(p, "idle", false);
+            break;
+          }
+          p.frameI = 0;
+        }
+        maybeSpawnHit(p);
+      }
+    }
+
+    function maybeSpawnHit(p) {
+      const hits = (sprite.hitFrames && sprite.hitFrames[p.clip]) || [];
+      if (!hits.includes(p.frameI) || p.hitDone.has(p.frameI)) return;
+      p.hitDone.add(p.frameI);
+      const reach = p.clip === "kick" ? 78 : 58;
+      const tall = p.clip === "kick" ? 70 : 48;
+      p.attackBox = {
+        x: p.x + p.facing * 28,
+        y: p.y - tall - 20,
+        w: reach,
+        h: tall,
+        dmg: p.clip === "kick" ? 18 : 12,
+        life: 0.08,
+      };
+    }
+
+    function spawnEnemy(kind = "grunt") {
+      const hp = 28 + game.wave * 6;
+      game.enemies.push({
+        kind,
+        x: W + 40 + Math.random() * 60,
+        y: GROUND,
+        vx: -(45 + game.wave * 6 + Math.random() * 20),
+        hp,
+        maxHp: hp,
+        hitFlash: 0,
+        bob: Math.random() * Math.PI * 2,
+        dead: false,
+      });
+    }
+
+    function startWave() {
+      const count = 2 + game.wave;
+      game.enemiesLeft = count;
+      game.spawnTimer = 0.4;
+      game.waveClearDelay = 0;
+      for (let i = 0; i < count; i++) {
+        // staggered via spawnTimer loop
+      }
+      game._toSpawn = count;
+    }
+
+    function resetGame() {
+      game.score = 0;
+      game.wave = 1;
+      game.enemies = [];
+      game.fx = [];
+      game.player = createPlayer();
+      game._toSpawn = 0;
+      startWave();
+      updateHud();
+    }
+
+    function updateHud() {
+      els.hudName.textContent = sprite?.name || "—";
+      els.hudWave.textContent = String(game.wave);
+      els.hudScore.textContent = String(game.score);
+      const p = game.player;
+      els.hudHp.style.width = p ? `${Math.max(0, (p.hp / p.maxHp) * 100)}%` : "0%";
+    }
+
+    function showOverlay(title, text, btnLabel = "再来一局") {
+      els.overlay.classList.remove("hidden");
+      els.overlayTitle.textContent = title;
+      els.overlayText.textContent = text;
+      els.btnStart.textContent = btnLabel;
+    }
+
+    function hideOverlay() {
+      els.overlay.classList.add("hidden");
+    }
+
+    function rectsOverlap(a, b) {
+      return a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
+    }
+
+    function update(dt) {
+      const p = game.player;
+      if (!p) return;
+
+      if (p.invuln > 0) p.invuln -= dt;
+      if (p.attackBox) {
+        p.attackBox.life -= dt;
+        if (p.attackBox.life <= 0) p.attackBox = null;
+      }
+
+      // input
+      if (!p.busy) {
+        const left = keys.has("ArrowLeft") || keys.has("KeyA");
+        const right = keys.has("ArrowRight") || keys.has("KeyD");
+        const down = keys.has("ArrowDown") || keys.has("KeyS");
+        const punch = keys.has("KeyZ") || keys.has("KeyJ");
+        const kick = keys.has("KeyX") || keys.has("KeyK");
+
+        if (punch) {
+          setClip(p, "punch", true);
+          keys.delete("KeyZ");
+          keys.delete("KeyJ");
+        } else if (kick) {
+          setClip(p, "kick", true);
+          keys.delete("KeyX");
+          keys.delete("KeyK");
+        } else if (down) {
+          setClip(p, "slide", true);
+          p.invuln = Math.max(p.invuln, 0.35);
+          p.vx = p.facing * 220;
+          keys.delete("ArrowDown");
+          keys.delete("KeyS");
+        } else if (left || right) {
+          p.facing = right ? 1 : -1;
+          p.vx = p.facing * 150;
+          setClip(p, "dash", false);
+        } else {
+          p.vx = 0;
+          setClip(p, "idle", false);
+        }
+      } else if (p.clip === "slide") {
+        p.vx *= 0.92;
+      } else {
+        p.vx *= 0.8;
+      }
+
+      p.x += p.vx * dt;
+      p.x = Math.max(60, Math.min(W - 60, p.x));
+      advanceAnim(p, dt);
+
+      // spawn
+      if (game._toSpawn > 0) {
+        game.spawnTimer -= dt;
+        if (game.spawnTimer <= 0) {
+          spawnEnemy();
+          game._toSpawn -= 1;
+          game.spawnTimer = 0.75 + Math.random() * 0.45;
+        }
+      }
+
+      // enemies
+      for (const e of game.enemies) {
+        if (e.dead) continue;
+        e.bob += dt * 6;
+        e.x += e.vx * dt;
+        if (e.hitFlash > 0) e.hitFlash -= dt;
+
+        // contact damage
+        const eb = { x: e.x - 22, y: e.y - 70, w: 44, h: 70 };
+        const pb = { x: p.x - 22, y: p.y - 70, w: 44, h: 70 };
+        if (p.invuln <= 0 && rectsOverlap(eb, pb)) {
+          p.hp -= 12;
+          p.invuln = 0.7;
+          setClip(p, "hit", true);
+          game.fx.push({ type: "text", x: p.x, y: p.y - 90, text: "-12", life: 0.6, vy: -40 });
+          if (p.hp <= 0) {
+            p.hp = 0;
+            state = "lose";
+            showOverlay("战败", `得分 ${game.score} · 波次 ${game.wave}。换个角色再试？`, "重新开始");
+          }
+        }
+
+        // player attack
+        if (p.attackBox) {
+          const box = {
+            x: p.facing === 1 ? p.attackBox.x : p.attackBox.x - p.attackBox.w,
+            y: p.attackBox.y,
+            w: p.attackBox.w,
+            h: p.attackBox.h,
+          };
+          if (rectsOverlap(box, eb)) {
+            e.hp -= p.attackBox.dmg;
+            e.hitFlash = 0.15;
+            e.x += p.facing * 18;
+            game.score += p.attackBox.dmg;
+            game.fx.push({
+              type: "spark",
+              x: e.x,
+              y: e.y - 50,
+              life: 0.25,
+            });
+            p.attackBox = null;
+            if (e.hp <= 0) {
+              e.dead = true;
+              game.enemiesLeft -= 1;
+              game.score += 50;
+              game.fx.push({ type: "text", x: e.x, y: e.y - 80, text: "+50", life: 0.7, vy: -50 });
+            }
+          }
+        }
+
+        if (e.x < -80) {
+          e.dead = true;
+          game.enemiesLeft -= 1;
+        }
+      }
+
+      game.enemies = game.enemies.filter((e) => !e.dead);
+
+      // wave clear
+      if (game._toSpawn <= 0 && game.enemies.length === 0 && state === "playing") {
+        game.waveClearDelay += dt;
+        if (game.waveClearDelay > 0.8) {
+          if (game.wave >= 5) {
+            state = "win";
+            setClip(p, "victory", true);
+            showOverlay("胜利！", `「${sprite.name}」清街成功 · 得分 ${game.score}`, "再来一局");
+          } else {
+            game.wave += 1;
+            game.score += 100;
+            startWave();
+            game.fx.push({ type: "banner", text: `WAVE ${game.wave}`, life: 1.2 });
+          }
+        }
+      }
+
+      // fx
+      for (const f of game.fx) {
+        f.life -= dt;
+        if (f.vy) f.y += f.vy * dt;
+      }
+      game.fx = game.fx.filter((f) => f.life > 0);
+
+      updateHud();
+    }
+
+    function drawBackground() {
+      const g = ctx.createLinearGradient(0, 0, 0, H);
+      g.addColorStop(0, "#1b2433");
+      g.addColorStop(0.55, "#243044");
+      g.addColorStop(0.55, "#2f3b28");
+      g.addColorStop(1, "#1c2418");
+      ctx.fillStyle = g;
+      ctx.fillRect(0, 0, W, H);
+
+      // skyline
+      ctx.fillStyle = "#121820";
+      for (let i = 0; i < 8; i++) {
+        const bx = i * 110 - 20;
+        const bh = 60 + ((i * 37) % 90);
+        ctx.fillRect(bx, GROUND - 40 - bh, 70, bh);
+        ctx.fillStyle = "#ff4d8b22";
+        for (let wy = 0; wy < 4; wy++) {
+          ctx.fillRect(bx + 10, GROUND - 50 - bh + wy * 18, 8, 8);
+          ctx.fillRect(bx + 28, GROUND - 50 - bh + wy * 18, 8, 8);
+          ctx.fillRect(bx + 46, GROUND - 50 - bh + wy * 18, 8, 8);
+        }
+        ctx.fillStyle = "#121820";
+      }
+
+      // ground
+      ctx.fillStyle = "#3a4632";
+      ctx.fillRect(0, GROUND, W, H - GROUND);
+      ctx.fillStyle = "#4a5740";
+      ctx.fillRect(0, GROUND, W, 6);
+      ctx.strokeStyle = "rgba(255,255,255,0.06)";
+      for (let x = 0; x < W; x += 40) {
+        ctx.beginPath();
+        ctx.moveTo(x, GROUND + 10);
+        ctx.lineTo(x + 20, H);
+        ctx.stroke();
+      }
+    }
+
+    function drawSpriteFrame(frameIdx, x, y, facing, flash) {
+      const rect = frameRects[frameIdx];
+      if (!rect || !keyedAtlas) return;
+      const dw = rect.w * SCALE;
+      const dh = rect.h * SCALE;
+      ctx.save();
+      ctx.translate(x, y);
+      ctx.scale(facing, 1);
+      if (flash) ctx.globalAlpha = 0.55 + Math.sin(performance.now() / 30) * 0.25;
+      ctx.drawImage(
+        keyedAtlas,
+        rect.x, rect.y, rect.w, rect.h,
+        -dw / 2, -dh, dw, dh
+      );
+      ctx.restore();
+    }
+
+    function drawEnemy(e) {
+      const bounce = Math.sin(e.bob) * 3;
+      ctx.save();
+      ctx.translate(e.x, e.y - bounce);
+      if (e.hitFlash > 0) ctx.globalAlpha = 0.5;
+      // shadow blob fighter
+      ctx.fillStyle = "#0a0d12";
+      ctx.beginPath();
+      ctx.ellipse(0, 0, 26, 8, 0, 0, Math.PI * 2);
+      ctx.fill();
+      const body = ctx.createLinearGradient(0, -78, 0, 0);
+      body.addColorStop(0, "#5c6b7a");
+      body.addColorStop(1, "#2a3340");
+      ctx.fillStyle = body;
+      ctx.beginPath();
+      ctx.moveTo(-18, -10);
+      ctx.lineTo(-22, -48);
+      ctx.lineTo(-8, -72);
+      ctx.lineTo(8, -72);
+      ctx.lineTo(22, -48);
+      ctx.lineTo(18, -10);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#ff6b5a";
+      ctx.fillRect(-6, -58, 12, 6);
+      // eyes
+      ctx.fillStyle = "#e8b94a";
+      ctx.fillRect(-10, -64, 5, 5);
+      ctx.fillRect(5, -64, 5, 5);
+      ctx.restore();
+
+      // hp
+      ctx.fillStyle = "rgba(0,0,0,0.35)";
+      ctx.fillRect(e.x - 20, e.y - 88, 40, 5);
+      ctx.fillStyle = "#ff6b5a";
+      ctx.fillRect(e.x - 20, e.y - 88, 40 * (e.hp / e.maxHp), 5);
+    }
+
+    function draw() {
+      drawBackground();
+
+      // attack box debug-ish glow
+      const p = game.player;
+      if (p?.attackBox) {
+        const box = p.attackBox;
+        ctx.fillStyle = "rgba(255, 214, 10, 0.18)";
+        const x = p.facing === 1 ? box.x : box.x - box.w;
+        ctx.fillRect(x, box.y, box.w, box.h);
+      }
+
+      for (const e of game.enemies) drawEnemy(e);
+
+      if (p) {
+        // shadow
+        ctx.fillStyle = "rgba(0,0,0,0.35)";
+        ctx.beginPath();
+        ctx.ellipse(p.x, p.y, 28, 8, 0, 0, Math.PI * 2);
+        ctx.fill();
+        if (!(p.useHitGif && p.clip === "hit")) {
+          const flash = p.invuln > 0 && Math.floor(p.invuln * 20) % 2 === 0;
+          drawSpriteFrame(currentFrameIndex(p), p.x, p.y + 4, p.facing, flash);
+        }
+        syncHitOverlay();
+      } else {
+        els.hitOverlay.classList.remove("is-on");
+      }
+
+      for (const f of game.fx) {
+        if (f.type === "text") {
+          ctx.fillStyle = "#e8b94a";
+          ctx.font = "600 14px Inter, sans-serif";
+          ctx.fillText(f.text, f.x - 10, f.y);
+        } else if (f.type === "spark") {
+          ctx.strokeStyle = `rgba(232,185,74,${f.life * 4})`;
+          ctx.lineWidth = 2;
+          for (let i = 0; i < 6; i++) {
+            const a = (i / 6) * Math.PI * 2;
+            ctx.beginPath();
+            ctx.moveTo(f.x, f.y);
+            ctx.lineTo(f.x + Math.cos(a) * 16, f.y + Math.sin(a) * 16);
+            ctx.stroke();
+          }
+        } else if (f.type === "banner") {
+          ctx.fillStyle = `rgba(255,255,255,${Math.min(1, f.life)})`;
+          ctx.font = "500 28px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.fillText(f.text, W / 2, 80);
+          ctx.textAlign = "left";
+        }
+      }
+    }
+
+    function loop(ts) {
+      const dt = Math.min(0.05, (ts - last) / 1000 || 0);
+      last = ts;
+      if (state === "playing") update(dt);
+      else if (state === "win" && game.player) advanceAnim(game.player, dt);
+      draw();
+      requestAnimationFrame(loop);
+    }
+
+    async function selectCharacter(id) {
+      const item = window.getSpriteById(id);
+      if (!item || !item.playable || !item.atlas) return;
+      const pack = await ensureAtlas(item);
+      sprite = item;
+      keyedAtlas = pack.keyed;
+      frameRects = pack.rects;
+      document.title = `${item.name} · 街口连招`;
+      const previewBtn = document.getElementById("btnToPreview");
+      if (previewBtn) previewBtn.href = `preview.html?id=${encodeURIComponent(item.id)}`;
+      if (game.player) {
+        // keep position/hp, refresh anim
+        setClip(game.player, game.player.busy ? game.player.clip : "idle", game.player.busy);
+      }
+      updateHud();
+      renderCharList();
+    }
+
+    function renderCharList() {
+      const list = window.SPRITE_CATALOG || [];
+      els.charList.innerHTML = list
+        .map((item) => {
+          const on = sprite && sprite.id === item.id ? " on" : "";
+          const canSelect = item.playable && item.atlas;
+          const locked = canSelect ? "" : " locked";
+          const media = item.gif
+            ? `<img class="mini" src="${item.gif}" alt="" />`
+            : `<div class="ph">占位</div>`;
+          let sub = "未导入 · 不可预览";
+          if (canSelect) sub = item.blurb;
+          else if (item.ready && item.role === "hit") sub = "受击特效 · 已接入游戏";
+          else if (item.ready && item.gif) sub = "动作库 GIF · 预览用";
+          return `
+            <button type="button" class="char${on}${locked}" data-id="${item.id}" ${canSelect ? "" : "disabled"}>
+              ${media}
+              <div>
+                <div class="name">${item.name}</div>
+                <div class="sub">${sub}</div>
+              </div>
+            </button>
+          `;
+        })
+        .join("");
+    }
+
+    function beginPlay() {
+      resetGame();
+      state = "playing";
+      hideOverlay();
+      els.btnPause.textContent = "暂停";
+    }
+
+    function isFullscreen() {
+      return !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+    }
+
+    function syncFullscreenUI() {
+      const on = isFullscreen();
+      els.btnFullscreen.textContent = on ? "退出全屏" : "全屏";
+      els.fsHint.textContent = on
+        ? "Esc 退出全屏 · Space 暂停"
+        : "F 全屏 · Esc 退出全屏";
+    }
+
+    async function enterFullscreen() {
+      const el = els.gameShell;
+      try {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+        else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+      } catch (err) {
+        console.warn("无法进入全屏", err);
+      }
+      syncFullscreenUI();
+    }
+
+    async function exitFullscreen() {
+      try {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        else if (document.webkitExitFullscreen) await document.webkitExitFullscreen();
+        else if (document.msExitFullscreen) await document.msExitFullscreen();
+      } catch (err) {
+        console.warn("无法退出全屏", err);
+      }
+      syncFullscreenUI();
+    }
+
+    async function toggleFullscreen() {
+      if (isFullscreen()) await exitFullscreen();
+      else await enterFullscreen();
+    }
+
+    // events
+    window.addEventListener("keydown", (e) => {
+      // Esc：优先退出全屏（网页版快捷键）
+      if (e.code === "Escape" || e.key === "Escape") {
+        if (isFullscreen()) {
+          e.preventDefault();
+          exitFullscreen();
+        }
+        return;
+      }
+
+      // F：切换全屏（输入框中不触发）
+      if ((e.code === "KeyF" || e.key === "f" || e.key === "F") && !e.metaKey && !e.ctrlKey && !e.altKey) {
+        if (!e.target.matches("input, textarea")) {
+          e.preventDefault();
+          toggleFullscreen();
+          return;
+        }
+      }
+
+      if (["ArrowLeft","ArrowRight","ArrowDown","ArrowUp","Space"].includes(e.code)) e.preventDefault();
+      keys.add(e.code);
+      if (e.code === "Space") {
+        if (state === "playing") {
+          state = "paused";
+          els.btnPause.textContent = "继续";
+          showOverlay(
+            "暂停",
+            isFullscreen() ? "空格继续 · Esc 退出全屏" : "按空格或点继续回到街口",
+            "继续"
+          );
+        } else if (state === "paused") {
+          state = "playing";
+          hideOverlay();
+          els.btnPause.textContent = "暂停";
+        }
+      }
+    });
+    window.addEventListener("keyup", (e) => keys.delete(e.code));
+
+    document.addEventListener("fullscreenchange", syncFullscreenUI);
+    document.addEventListener("webkitfullscreenchange", syncFullscreenUI);
+
+    canvas.addEventListener("pointerdown", () => {
+      if (state !== "playing" || !game.player || game.player.busy) return;
+      setClip(game.player, "punch", true);
+    });
+
+    document.querySelector(".touch-pad").addEventListener("pointerdown", (e) => {
+      const btn = e.target.closest("button[data-key]");
+      if (!btn) return;
+      keys.add(btn.dataset.key);
+    });
+    document.querySelector(".touch-pad").addEventListener("pointerup", (e) => {
+      const btn = e.target.closest("button[data-key]");
+      if (!btn) return;
+      keys.delete(btn.dataset.key);
+    });
+
+    els.charList.addEventListener("click", (e) => {
+      const btn = e.target.closest("button.char[data-id]");
+      if (!btn || btn.disabled) return;
+      selectCharacter(btn.dataset.id);
+    });
+
+    els.btnStart.addEventListener("click", () => {
+      if (state === "paused") {
+        state = "playing";
+        hideOverlay();
+        els.btnPause.textContent = "暂停";
+        return;
+      }
+      beginPlay();
+    });
+    els.btnRestart.addEventListener("click", () => beginPlay());
+    els.btnFullscreen.addEventListener("click", () => toggleFullscreen());
+    els.btnPause.addEventListener("click", () => {
+      if (state === "playing") {
+        state = "paused";
+        els.btnPause.textContent = "继续";
+        showOverlay("暂停", "换角可在暂停时进行，然后继续预览", "继续");
+      } else if (state === "paused") {
+        state = "playing";
+        hideOverlay();
+        els.btnPause.textContent = "暂停";
+      }
+    });
+
+    (async function boot() {
+      renderCharList();
+      const params = new URLSearchParams(location.search);
+      const id = params.get("id") || window.getPlayableSprites()[0]?.id || "jack-attack";
+      try {
+        await selectCharacter(id);
+        game.player = createPlayer();
+        updateHud();
+        syncFullscreenUI();
+        requestAnimationFrame(loop);
+      } catch (err) {
+        showOverlay("加载失败", err.message, "返回 Home");
+        els.btnStart.onclick = () => (location.href = "index.html");
+      }
+    })();
+  </script>
+</body>
+</html>
