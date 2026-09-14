@@ -1,0 +1,3 @@
+<TextureAtlas imagePath="spritesheet.png" width="1774" height="887">
+  <sprite n="run" x="0" y="0" w="1774" h="887"/>
+</TextureAtlas>
